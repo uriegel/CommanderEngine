@@ -33,11 +33,34 @@ class Service: Service() {
             }
 
         running.value = true
+
+        server.start()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        wakeLock.let {
+            if (it.isHeld) {
+                it.release()
+            }
+        }
+
+        server.stop()
+
+        running.value = false
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForeground(1, notification)
+        return START_STICKY
+    }
+
     override fun onBind(intent: Intent): IBinder? = null
 
     private lateinit var notification: Notification
     private lateinit var wakeLock: PowerManager.WakeLock
+    private val server = Server()
 
     companion object {
         val running = MutableLiveData(false)
