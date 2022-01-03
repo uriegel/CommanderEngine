@@ -2,4 +2,10 @@
     <string name="app_name">Commander Engine</string>
     <string name="app_title">Commander Engine</string>
     <string name="service_notification_text">Verbindet Android mit Commander</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_start">Start</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="alert_stop_service">Möchtest Du die Verbindung zum Commander trennen?</string>
+    <string name="alert_title_stop_service">Beenden</string>
 </resources>
