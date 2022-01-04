@@ -5,7 +5,6 @@ import io.ktor.features.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.gson.*
-import io.ktor.response.*
 import io.ktor.routing.*
 import java.util.concurrent.TimeUnit
 
@@ -19,10 +18,12 @@ class Server {
         install(ContentNegotiation) {
             gson {}
         }
+        install(CORS) {
+            anyHost()
+        }
         routing {
-            get("/") {
-                call.respond(mapOf("message" to "Hallo Wörlt"))
-            }
+            testRoute()
+            testPostRoute()
         }
     }
 }
