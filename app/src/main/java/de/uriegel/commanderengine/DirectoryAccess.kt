@@ -42,4 +42,4 @@ data class ItemResult(val path: String, val items: List<Item>)
 data class Item(val name: String, val size: Long)
 
 @Serializable
-data class Params(val path: String)
+data class Params(val path: String, val count: Int)
