@@ -2,6 +2,7 @@ package de.uriegel.commanderengine
 
 import android.os.Environment
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -33,6 +34,24 @@ fun Route.getFilesRoute() {
                     File(it.name, it.isDirectory, it.length(), it.name.startsWith('.'), it.lastModified())
                 }
             call.respond(items ?: listOf<File>())
+        }
+    }
+}
+
+fun Route.getDownloadRoute() {
+    route("/getfile") {
+        get {
+            // get filename from request url
+            //val filename = call.parameters["name"]!!
+            // construct reference to file
+            // ideally this would use a different filename
+            val file = File("${Environment.getExternalStorageDirectory()}/DCIM/Camera/IMG_20210912_150213.jpg")
+            if (file.exists()) {
+                call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
+                call.respondFile(file)
+            }
+            else
+                call.respond(HttpStatusCode.NotFound)
         }
     }
 }

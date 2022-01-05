@@ -23,6 +23,7 @@ class Server {
         }
         routing {
             getFilesRoute()
+            getDownloadRoute()
             testRoute()
         }
     }
