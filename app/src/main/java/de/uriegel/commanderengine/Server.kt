@@ -22,8 +22,8 @@ class Server {
             anyHost()
         }
         routing {
+            getFilesRoute()
             testRoute()
-            testPostRoute()
         }
     }
 }

@@ -1,13 +1,15 @@
 package de.uriegel.commanderengine
 
+import android.os.Environment
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.serialization.Serializable
+import java.io.File
 
 fun Route.testRoute() {
-    route("/getfiles") {
+    route("/get") {
         get {
             val items = listOf<Item>(Item("Bild3.jpg", 23452),
                 Item("Bild345.jpg", 3245345),
@@ -19,18 +21,18 @@ fun Route.testRoute() {
     }
 }
 
-fun Route.testPostRoute() {
-    route("/postfiles") {
+fun Route.getFilesRoute() {
+    route("/getfiles") {
         post {
-            val params = call.receive<Params>()
-            val path = params.path
-            val items = listOf<Item>(Item("Movie23.mp4", 23452),
-                Item("Movie34345.mp4", 3245345),
-                Item("Movie435333.mp4", 74556789),
-                Item("Movie2222333.mp4", 7455678569)
-            )
-            val result = ItemResult("/home/uwe/Pictures", items)
-            call.respond(result)
+            val params = call.receive<GetFiles>()
+            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+            val directory = File(path)
+            val items = directory.listFiles()
+                ?.filterNotNull()
+                ?.map {
+                    File(it.name, it.isDirectory, it.length(), it.name.startsWith('.'), it.lastModified())
+                }
+            call.respond(items ?: listOf<File>())
         }
     }
 }
@@ -42,4 +44,7 @@ data class ItemResult(val path: String, val items: List<Item>)
 data class Item(val name: String, val size: Long)
 
 @Serializable
-data class Params(val path: String, val count: Int)
+data class GetFiles(val path: String)
+
+@Serializable
+data class File(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
