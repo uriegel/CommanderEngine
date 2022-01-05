@@ -40,12 +40,10 @@ fun Route.getFilesRoute() {
 
 fun Route.getDownloadRoute() {
     route("/getfile") {
-        get {
-            // get filename from request url
-            //val filename = call.parameters["name"]!!
-            // construct reference to file
-            // ideally this would use a different filename
-            val file = File("${Environment.getExternalStorageDirectory()}/DCIM/Camera/IMG_20210912_150213.jpg")
+        post {
+            val params = call.receive<GetFiles>()
+            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+            val file = File(path)
             if (file.exists()) {
                 call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
                 call.respondFile(file)
