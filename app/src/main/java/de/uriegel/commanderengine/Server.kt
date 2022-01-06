@@ -23,7 +23,7 @@ class Server {
         }
         routing {
             getFilesRoute()
-            getFilesRoute()
+            getFileRoute()
             getFilesInfosRoute()
         }
     }

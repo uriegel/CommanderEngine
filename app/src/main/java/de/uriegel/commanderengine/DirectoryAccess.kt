@@ -46,6 +46,7 @@ fun Route.getFileRoute() {
             val file = File(path)
             if (file.exists()) {
                 call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
+                call.response.header("x-file-date", "${file.lastModified()}")
                 call.respondFile(file)
             }
             else
