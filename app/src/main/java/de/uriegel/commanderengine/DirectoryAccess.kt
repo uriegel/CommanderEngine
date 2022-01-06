@@ -38,7 +38,7 @@ fun Route.getFilesRoute() {
     }
 }
 
-fun Route.getDownloadRoute() {
+fun Route.getFileRoute() {
     route("/getfile") {
         post {
             val params = call.receive<GetFiles>()
@@ -54,14 +54,23 @@ fun Route.getDownloadRoute() {
     }
 }
 
-@Serializable
+fun Route.getFilesInfosRoute() {
+    route("/getfilesinfos") {
+        post {
+            val params = call.receive<GetFilesInfos>()
+            val infos = params.files.map {
+                val path = "${Environment.getExternalStorageDirectory()}${it}"
+                val file = File(path)
+                FileInfo(path, file.length(), file.lastModified())
+            }
+            call.respond(infos)
+        }
+    }
+}
+
 data class ItemResult(val path: String, val items: List<Item>)
-
-@Serializable
 data class Item(val name: String, val size: Long)
-
-@Serializable
 data class GetFiles(val path: String)
-
-@Serializable
+data class GetFilesInfos(val files: List<String>)
 data class File(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
+data class FileInfo(val file: String, val size: Long, val time: Long)
