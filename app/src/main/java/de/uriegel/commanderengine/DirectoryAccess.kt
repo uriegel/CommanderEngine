@@ -1,3 +1,5 @@
+@file:Suppress("OPT_IN_IS_NOT_ENABLED")
+
 package de.uriegel.commanderengine
 
 import android.os.Environment
@@ -6,17 +8,34 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.delay
+
 import java.io.File
 
-fun Route.testRoute() {
-    route("/get") {
+@OptIn(ObsoleteCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+fun initializeCopyProgress(application: io.ktor.server.application.Application): BroadcastChannel<SseEvent> =
+    application.produce { // this: ProducerScope<SseEvent> ->
+        var n = 0
+        while (true) {
+            send(SseEvent("demo Nummer $n"))
+            delay(1000)
+            n++
+        }
+    }.broadcast()
+
+@OptIn(ObsoleteCoroutinesApi::class)
+fun Route.getCopyProgressEventsRoute(channel: BroadcastChannel<SseEvent>) {
+    route("/sse") {
         get {
-            val items = listOf<Item>(Item("Bild3.jpg", 23452),
-                Item("Bild345.jpg", 3245345),
-                Item("Bild333.jpg", 74556789)
-            )
-            val result = ItemResult("/home/uwe/Pictures", items)
-            call.respond(result)
+            val events = channel.openSubscription()
+            try {
+                call.respondSse(events)
+            } finally {
+                events.cancel()
+            }
         }
     }
 }
@@ -79,8 +98,6 @@ fun Route.getFilesInfosRoute() {
     }
 }
 
-data class ItemResult(val path: String, val items: List<Item>)
-data class Item(val name: String, val size: Long)
 data class GetFiles(val path: String)
 data class GetFilesInfos(val files: List<String>)
 data class File(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
