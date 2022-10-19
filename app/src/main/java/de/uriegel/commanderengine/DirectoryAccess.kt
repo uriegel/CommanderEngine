@@ -1,12 +1,11 @@
 package de.uriegel.commanderengine
 
 import android.os.Environment
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import kotlinx.serialization.Serializable
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import java.io.File
 
 fun Route.testRoute() {
@@ -25,15 +24,26 @@ fun Route.testRoute() {
 fun Route.getFilesRoute() {
     route("/getfiles") {
         post {
-            val params = call.receive<GetFiles>()
-            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-            val directory = File(path)
-            val items = directory.listFiles()
-                ?.filterNotNull()
-                ?.map {
-                    File(it.name, it.isDirectory, it.length(), it.name.startsWith('.'), it.lastModified())
-                }
-            call.respond(items ?: listOf<File>())
+            try {
+                val params = call.receive<GetFiles>()
+                val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+                val directory = File(path)
+                val items = directory.listFiles()
+                    ?.filterNotNull()
+                    ?.map {
+                        File(
+                            it.name,
+                            it.isDirectory,
+                            it.length(),
+                            it.name.startsWith('.'),
+                            it.lastModified()
+                        )
+                    }
+                call.respond(items ?: listOf<File>())
+            } catch (exn: java.lang.Exception) {
+                val affe = exn
+                val e = affe.toString()
+            }
         }
     }
 }
