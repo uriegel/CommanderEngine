@@ -1,5 +1,3 @@
-@file:Suppress("OPT_IN_IS_NOT_ENABLED")
-
 package de.uriegel.commanderengine
 
 import android.os.Environment
@@ -8,61 +6,27 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.delay
 
 import java.io.File
-
-@OptIn(ObsoleteCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-fun initializeCopyProgress(application: io.ktor.server.application.Application): BroadcastChannel<SseEvent> =
-    application.produce { // this: ProducerScope<SseEvent> ->
-        var n = 0
-        while (true) {
-            send(SseEvent("demo Nummer $n"))
-            delay(1000)
-            n++
-        }
-    }.broadcast()
-
-@OptIn(ObsoleteCoroutinesApi::class)
-fun Route.getCopyProgressEventsRoute(channel: BroadcastChannel<SseEvent>) {
-    route("/sse") {
-        get {
-            val events = channel.openSubscription()
-            try {
-                call.respondSse(events)
-            } finally {
-                events.cancel()
-            }
-        }
-    }
-}
 
 fun Route.getFilesRoute() {
     route("/getfiles") {
         post {
-            try {
-                val params = call.receive<GetFiles>()
-                val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-                val directory = File(path)
-                val items = directory.listFiles()
-                    ?.filterNotNull()
-                    ?.map {
-                        File(
-                            it.name,
-                            it.isDirectory,
-                            it.length(),
-                            it.name.startsWith('.'),
-                            it.lastModified()
-                        )
-                    }
-                call.respond(items ?: listOf<File>())
-            } catch (exn: java.lang.Exception) {
-                val affe = exn
-                val e = affe.toString()
-            }
+            val params = call.receive<GetFiles>()
+            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+            val directory = File(path)
+            val items = directory.listFiles()
+                ?.filterNotNull()
+                ?.map {
+                    File(
+                        it.name,
+                        it.isDirectory,
+                        it.length(),
+                        it.name.startsWith('.'),
+                        it.lastModified()
+                    )
+                }
+            call.respond(items ?: listOf<File>())
         }
     }
 }
