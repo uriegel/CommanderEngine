@@ -55,7 +55,7 @@ fun Route.getFilesInfosRoute() {
             val infos = params.files.map {
                 val path = "${Environment.getExternalStorageDirectory()}${it}"
                 val file = File(path)
-                FileInfo(path, file.length(), file.lastModified())
+                FileInfo(it, file.length(), file.lastModified())
             }
             call.respond(infos)
         }
