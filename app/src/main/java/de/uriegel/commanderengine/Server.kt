@@ -27,6 +27,7 @@ class Server {
             getFilesRoute()
             getFileRoute()
             getFilesInfosRoute()
+            postFileRoute()
         }
     }
 }
