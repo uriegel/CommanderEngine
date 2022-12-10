@@ -76,7 +76,10 @@ fun Route.getFilesInfosRoute() {
             val infos = params.files.map {
                 val path = "${Environment.getExternalStorageDirectory()}${it}"
                 val file = File(path)
-                FileInfo(it, file.length(), file.lastModified())
+                if (file.exists())
+                    FileInfo(true, it, file.length(), file.lastModified())
+                else
+                    FileInfo(false, it, file.length(), file.lastModified())
             }
             call.respond(infos)
         }
@@ -86,4 +89,4 @@ fun Route.getFilesInfosRoute() {
 data class GetFiles(val path: String)
 data class GetFilesInfos(val files: List<String>)
 data class File(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
-data class FileInfo(val file: String, val size: Long, val time: Long)
+data class FileInfo(val exists: Boolean, val file: String, val size: Long, val time: Long)
