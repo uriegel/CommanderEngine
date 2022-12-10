@@ -2,7 +2,6 @@ package de.uriegel.commanderengine
 
 import android.os.Environment
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -55,14 +54,15 @@ fun Route.postFileRoute() {
     route("/postfile") {
         post {
             withContext(Dispatchers.IO) {
-                val path = call.request.queryParameters["path"]!!
-                val date = call.request.header("x-file-date")
-                val test3 = date
-                val test = path
-                val stream = call.receiveStream()
-                val path2 = "${Environment.getExternalStorageDirectory()}/DCIM/test.jpg"
-                val file = File(path2)
-                stream.copyTo(file.outputStream())
+                val file = File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
+                call.receiveStream().copyTo(file.outputStream())
+                val ft =
+                    call
+                        .request
+                        .header("x-file-date")
+                        ?.toLong()
+                if (ft != null)
+                    file.setLastModified(ft)
                 call.respond(HttpStatusCode.OK)
             }
         }
