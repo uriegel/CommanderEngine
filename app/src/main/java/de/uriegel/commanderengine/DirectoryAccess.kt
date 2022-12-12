@@ -53,6 +53,36 @@ fun Route.getFileRoute() {
     }
 }
 
+fun Route.getImageRoute() {
+    route("/getimage") {
+        get {
+            val path = "${Environment.getExternalStorageDirectory()}/DCIM/Camera/20221211_114705.jpg"
+            val file = File(path)
+            if (file.exists()) {
+                //call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
+                //call.response.header("x-file-date", "${file.lastModified()}")
+                call.respondFile(file)
+            }
+            else
+                call.respond(HttpStatusCode.NotFound)
+        }
+    }
+}
+
+fun Route.getVideoRoute() {
+    route("/getvideo") {
+        get {
+            val path = "${Environment.getExternalStorageDirectory()}/DCIM/Camera/20221211_131609.mp4"
+            val file = File(path)
+            if (file.exists()) {
+                call.respondFile(file)
+            }
+            else
+                call.respond(HttpStatusCode.NotFound)
+        }
+    }
+}
+
 fun Route.postFileRoute() {
     route("/postfile") {
         post {
