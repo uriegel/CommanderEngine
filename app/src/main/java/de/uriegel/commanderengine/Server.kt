@@ -32,8 +32,7 @@ class Server {
             getFileRoute()
             getFilesInfosRoute()
             postFileRoute()
-            getImageRoute()
-            getVideoRoute()
+            get()
         }
     }
 }
