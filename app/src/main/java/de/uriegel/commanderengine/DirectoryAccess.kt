@@ -33,6 +33,9 @@ fun Route.getFilesRoute() {
     }
 }
 
+//TODO https://ktor.io/docs/partial-content.html#install_plugin
+//TODO use get request
+
 fun Route.getFileRoute() {
     route("/getfile") {
         post {
