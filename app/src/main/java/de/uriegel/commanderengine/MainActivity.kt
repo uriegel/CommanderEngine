@@ -33,15 +33,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         launch {
-            val backgroundResult = activityRequest.checkAndAccessPermissions(
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-            if (backgroundResult.any { !it.value }) {
-                toast(R.string.no_access, Toast.LENGTH_LONG)
-                finish()
-                return@launch
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                val backgroundResult = activityRequest.checkAndAccessPermissions(
+                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                if (backgroundResult.any { !it.value }) {
+                    toast(R.string.no_access, Toast.LENGTH_LONG)
+                    finish()
+                    return@launch
+                }
             }
 
-            if (Build.VERSION.SDK_INT >= 30 && !hasAllFilesPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !hasAllFilesPermission()) {
                 val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
                 activityRequest.launch(Intent( Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri))
             }
