@@ -15,7 +15,7 @@ class Application: Application() {
             "CHANNEL_SERVICE", NotificationManager.IMPORTANCE_DEFAULT)
         channel.description = "Channel for foreground service"
         val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager?.createNotificationChannel(channel)
+        notificationManager.createNotificationChannel(channel)
     }
 
     companion object {

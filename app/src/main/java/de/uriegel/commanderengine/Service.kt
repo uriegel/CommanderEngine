@@ -32,16 +32,6 @@ fun Context.stopService() {
 class Service: Service() {
     override fun onCreate() {
         super.onCreate()
-
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
-        notification = NotificationCompat.Builder(this, CHANNEL_SERVICE_ID)
-            .setContentTitle(getString(R.string.app_title))
-            .setContentText(getString(R.string.service_notification_text))
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .build()
-
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
             .run {
                 newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
@@ -54,6 +44,18 @@ class Service: Service() {
         server.start()
     }
 
+    private fun showNotification() {
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0,
+            notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+        notification = NotificationCompat.Builder(this, CHANNEL_SERVICE_ID)
+            .setContentTitle(getString(R.string.app_title))
+            .setContentText(getString(R.string.service_notification_text))
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(pendingIntent)
+            .build()
+        startForeground(1, notification)
+    }
     override fun onDestroy() {
         super.onDestroy()
 
@@ -69,7 +71,7 @@ class Service: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(1, notification)
+        showNotification()
         return START_STICKY
     }
 
