@@ -5,11 +5,29 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
 import de.uriegel.commanderengine.Application.Companion.CHANNEL_SERVICE_ID
+import de.uriegel.commanderengine.ui.MainActivity
+
+fun Context.startService() {
+    val startIntent = Intent(this, de.uriegel.commanderengine.Service::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        startForegroundService(startIntent)
+    else
+        startService(startIntent)
+}
+
+fun Context.stopService() {
+    val startIntent = Intent(this, de.uriegel.commanderengine.Service::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        startForegroundService(startIntent)
+    else
+        startService(startIntent)
+}
 
 class Service: Service() {
     override fun onCreate() {

@@ -7,7 +7,6 @@ import android.app.NotificationManager
 class Application: Application() {
     override fun onCreate() {
         super.onCreate()
-        instance = this
         createNotificationChannel()
     }
 
@@ -20,8 +19,6 @@ class Application: Application() {
     }
 
     companion object {
-        lateinit var instance: Application
-            private set
         const val CHANNEL_SERVICE_ID = "CHANNEL_SERVICE"
     }
 }
