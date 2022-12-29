@@ -1,6 +1,5 @@
 package de.uriegel.commanderengine.ui
 
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -12,17 +11,15 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.PermissionState
 import de.uriegel.commanderengine.BuildConfig
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CheckPermissions(setPermissionState: (Boolean)->Unit, hasAllFilesPermission: ()->Boolean) {
+fun CheckPermissions(storagePermissionState: PermissionState, setPermissionState: (Boolean)->Unit,
+                     hasAllFilesPermission: ()->Boolean) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-
-    val permissionsState = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     DisposableEffect(
         key1 = lifecycleOwner,
@@ -40,13 +37,11 @@ fun CheckPermissions(setPermissionState: (Boolean)->Unit, hasAllFilesPermission:
                             context.startActivity(intent)
                         }
                         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
-                            permissionsState.launchPermissionRequest()
+                            storagePermissionState.launchPermissionRequest()
                     }
                     Lifecycle.Event.ON_RESUME -> {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
                             setPermissionState(hasAllFilesPermission())
-                        else
-                            setPermissionState(permissionsState.status.isGranted)
                     }
                     else -> {}
                 }

@@ -61,9 +61,11 @@ android {
     }
 }
 
-sourceSets {
-    all {
-        languageSettings.optIn("de.uriegel.commanderengine")
+kotlin {
+    sourceSets {
+        all {
+            languageSettings.optIn("kotlin.RequiresOptIn")
+        }
     }
 }
 dependencies {

@@ -1,9 +1,9 @@
 package de.uriegel.commanderengine.ui
 
+import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -18,16 +18,20 @@ import de.uriegel.commanderengine.extensions.startService
 import de.uriegel.commanderengine.extensions.stopService
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // TODO ?
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         setContent {
             CommanderEngineTheme {
                 var permissionState by remember {
                     mutableStateOf(false)
                 }
-                CheckPermissions({permissionState = it}) { hasAllFilesPermission() }
+                val storagePermissionState = rememberPermissionState(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+                CheckPermissions(storagePermissionState,
+                    {permissionState = it}, {hasAllFilesPermission()})
 
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -39,22 +43,21 @@ class MainActivity : ComponentActivity() {
                             Text("Commander Engine")
                         })
                     }, content = {
-                        //                    when {
-//                        permissionState.status.isGranted -> {
-//                            MainScreen()
-//                        }
-//                        permissionState.status.shouldShowRationale -> {
-//                            Test1()
-//                        }
-//                        !permissionState.status.isGranted && !permissionState.status.shouldShowRationale -> {
-//                            Test2()
-//                        }
-//                    }
-                        if (permissionState)
-                            MainScreen({startService()}, {stopService()}, it)
-                        else
-                            Test1()
-
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            if (permissionState)
+                                MainScreen({startService()}, {stopService()}, it)
+                            else
+                                Test1()
+                        } else {
+                            when {
+                                storagePermissionState.status.isGranted ->
+                                    MainScreen({startService()}, {stopService()}, it)
+                                storagePermissionState.status.shouldShowRationale -> Test2()
+                                !storagePermissionState.status.isGranted
+                                        && !storagePermissionState.status.shouldShowRationale ->
+                                    Test1()
+                            }
+                        }
                     })
                 }
             }

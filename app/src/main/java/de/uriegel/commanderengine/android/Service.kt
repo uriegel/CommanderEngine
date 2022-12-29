@@ -5,8 +5,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import de.uriegel.commanderengine.R
@@ -29,6 +31,7 @@ class Service: Service() {
         pending.value = false
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun showNotification() {
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0,
@@ -57,7 +60,8 @@ class Service: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        showNotification()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            showNotification()
         return START_STICKY
     }
 
