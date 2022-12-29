@@ -24,9 +24,6 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContent {
             CommanderEngineTheme {
-//                val permissionState = rememberPermissionState(
-//                    permission = Manifest.permission.READ_EXTERNAL_STORAGE
-//                )
                 var permissionState by remember {
                     mutableStateOf(false)
                 }
@@ -37,7 +34,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-//                    when {
+                    Scaffold(topBar = {
+                        TopAppBar(title = {
+                            Text("Commander Engine")
+                        })
+                    }, content = {
+                        //                    when {
 //                        permissionState.status.isGranted -> {
 //                            MainScreen()
 //                        }
@@ -48,10 +50,12 @@ class MainActivity : ComponentActivity() {
 //                            Test2()
 //                        }
 //                    }
-                    if (permissionState)
-                        MainScreen({startService()}, {stopService()})
-                    else
-                        Test1()
+                        if (permissionState)
+                            MainScreen({startService()}, {stopService()}, it)
+                        else
+                            Test1()
+
+                    })
                 }
             }
         }
