@@ -4,23 +4,25 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import de.uriegel.commanderengine.R
 
 @Composable
 fun ServiceAlertDialog(onDismiss: () -> Unit, onOk: ()->Unit) {
     AlertDialog(
-        onDismissRequest = { /*TODO*/ },
+        onDismissRequest = { },
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()
                 onOk()
-            }) { Text(text = "OK") }
+            }) { Text(text = stringResource(id = R.string.ok)) }
         },
         dismissButton = {
             TextButton(onClick = { onDismiss() }) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel))
             }
         },
-        title = { Text(text = "Please confirm") },
-        text = { Text(text = "Should I continue with the requested action?") }
+        title = { Text(text = stringResource(id = R.string.alert_title_stop_service)) },
+        text = { Text(text = stringResource(id = R.string.alert_stop_service)) }
     )
 }

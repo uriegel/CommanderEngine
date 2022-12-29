@@ -8,5 +8,8 @@
     <string name="cancel">Abbrechen</string>
     <string name="alert_stop_service">Möchtest Du die Verbindung zum Commander trennen?</string>
     <string name="alert_title_stop_service">Beenden</string>
-    <string name="no_access">Keine ausreichende Berechtigung erteilt!</string>
+    <string name="CHANNEL_SERVICE">Berechtigungen</string>
+    <string name="CHANNEL_SERVICE_DESCRIPTION">Benachrichtigung für Berechtigungen</string>
+    <string name="PERMISSION_SHOW_RATIONALE">Berechtigung für den Dateizugriff wird benötigt</string>
+    <string name="PERMISSION_DENIED">Berechtigung für den Dateizugriff wurde verweigert. Du kannst die Berechtigung in den App-Einstellungen erteilen</string>
 </resources>

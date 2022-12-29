@@ -8,9 +8,11 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.uriegel.commanderengine.Model
+import de.uriegel.commanderengine.R
 
 @Composable
 fun MainScreen(start: ()->Unit, stop: ()->Unit,
@@ -45,7 +47,7 @@ fun MainScreen(start: ()->Unit, stop: ()->Unit,
                 centerHorizontallyTo(parent)
             }
         ) {
-            Text("Start")
+            Text(stringResource(id = R.string.btn_start))
         }
         Button(
             enabled = !viewModel.servicePending.value && viewModel.serviceRunning.value,
@@ -56,9 +58,7 @@ fun MainScreen(start: ()->Unit, stop: ()->Unit,
                 centerHorizontallyTo(parent)
             }
         ) {
-            Text("Stop")
+            Text(stringResource(id = R.string.btn_stop))
         }
     }
 }
-
-

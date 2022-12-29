@@ -7,12 +7,13 @@ import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.*
+import de.uriegel.commanderengine.R
+import de.uriegel.commanderengine.extensions.isPermanentlyDenied
 import de.uriegel.commanderengine.ui.theme.CommanderEngineTheme
 import de.uriegel.commanderengine.extensions.startService
 import de.uriegel.commanderengine.extensions.stopService
@@ -40,22 +41,22 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Scaffold(topBar = {
                         TopAppBar(title = {
-                            Text("Commander Engine")
+                            Text(getString(R.string.app_title) )
                         })
                     }, content = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             if (permissionState)
                                 MainScreen({startService()}, {stopService()}, it)
                             else
-                                Test1()
+                                DialogScreen(R.string.PERMISSION_DENIED, it)
                         } else {
                             when {
                                 storagePermissionState.status.isGranted ->
                                     MainScreen({startService()}, {stopService()}, it)
-                                storagePermissionState.status.shouldShowRationale -> Test2()
-                                !storagePermissionState.status.isGranted
-                                        && !storagePermissionState.status.shouldShowRationale ->
-                                    Test1()
+                                storagePermissionState.status.shouldShowRationale ->
+                                    DialogScreen(R.string.PERMISSION_SHOW_RATIONALE, it)
+                                storagePermissionState.isPermanentlyDenied() ->
+                                    DialogScreen(R.string.PERMISSION_DENIED, it)
                             }
                         }
                     })
@@ -67,30 +68,4 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
     private fun hasAllFilesPermission() =
         Environment.isExternalStorageManager()
-}
-
-@Composable
-fun Test1() {
-    Text("Test 1")
-}
-
-@Composable
-fun Test2() {
-    Text("Test 2")
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    CommanderEngineTheme {
-        MainScreen({}, {})
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ServiceAlertPreview() {
-    CommanderEngineTheme {
-        ServiceAlertDialog({}, {})
-    }
 }
