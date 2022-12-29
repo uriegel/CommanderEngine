@@ -11,7 +11,7 @@
         tools:ignore="ScopedStorage" />
 
     <application
-        android:name=".Application"
+        android:name=".android.Application"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -38,7 +38,7 @@
         </activity>
 
         <service
-            android:name=".Service"
+            android:name=".android.Service"
             android:enabled="true"
             android:foregroundServiceType="connectedDevice" />
     </application>

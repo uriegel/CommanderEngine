@@ -1,4 +1,4 @@
-package de.uriegel.commanderengine
+package de.uriegel.commanderengine.android
 
 import android.app.Application
 import android.app.NotificationChannel
@@ -11,7 +11,8 @@ class Application: Application() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(CHANNEL_SERVICE_ID,
+        val channel = NotificationChannel(
+            CHANNEL_SERVICE_ID,
             "CHANNEL_SERVICE", NotificationManager.IMPORTANCE_DEFAULT)
         channel.description = "Channel for foreground service"
         val notificationManager = getSystemService(NotificationManager::class.java)

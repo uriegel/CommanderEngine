@@ -61,6 +61,11 @@ android {
     }
 }
 
+sourceSets {
+    all {
+        languageSettings.optIn("de.uriegel.commanderengine")
+    }
+}
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.9.0'

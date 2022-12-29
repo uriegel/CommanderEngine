@@ -13,11 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.*
-import de.uriegel.commanderengine.startService
 import de.uriegel.commanderengine.ui.theme.CommanderEngineTheme
+import de.uriegel.commanderengine.extensions.startService
+import de.uriegel.commanderengine.extensions.stopService
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // TODO ?
@@ -49,15 +49,13 @@ class MainActivity : ComponentActivity() {
 //                        }
 //                    }
                     if (permissionState)
-                        MainScreen{start()}
+                        MainScreen({startService()}, {stopService()})
                     else
                         Test1()
                 }
             }
         }
     }
-
-    private fun start() = startService()
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun hasAllFilesPermission() = Environment.isExternalStorageManager()
@@ -77,7 +75,14 @@ fun Test2() {
 @Composable
 fun DefaultPreview() {
     CommanderEngineTheme {
-        MainScreen {}
+        MainScreen({}, {})
     }
 }
 
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ServiceAlertPreview() {
+    CommanderEngineTheme {
+        ServiceAlertDialog({}, {})
+    }
+}

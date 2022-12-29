@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.constraintlayout.compose.ConstraintLayout
 
 @Composable
-fun MainScreen(start: ()->Unit) {
+fun MainScreen(start: ()->Unit, stop: ()->Unit) {
     Scaffold(topBar = {
         TopAppBar(title = {
             Text("Commander Engine")
@@ -21,7 +21,7 @@ fun MainScreen(start: ()->Unit) {
         var showDialog by remember { mutableStateOf(false) }
         if (showDialog)
             ServiceAlertDialog({ showDialog = false }) {
-                val affe = 0
+                stop()
             }
         ConstraintLayout(modifier =
             Modifier
