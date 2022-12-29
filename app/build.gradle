@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId "de.uriegel.commanderengine"
-        minSdk 28
+        minSdk 22
         targetSdk 33
         versionCode 1
         versionName "1.0"

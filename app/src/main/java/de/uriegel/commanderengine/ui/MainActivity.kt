@@ -58,7 +58,8 @@ class MainActivity : ComponentActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
-    private fun hasAllFilesPermission() = Environment.isExternalStorageManager()
+    private fun hasAllFilesPermission() =
+        Environment.isExternalStorageManager()
 }
 
 @Composable
