@@ -7,8 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.os.PowerManager
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.MutableLiveData
 import de.uriegel.commanderengine.R
 import de.uriegel.commanderengine.Server
 import de.uriegel.commanderengine.android.Application.Companion.CHANNEL_SERVICE_ID
@@ -24,9 +24,9 @@ class Service: Service() {
                 }
             }
 
-        running.value = true
-
         server.start()
+        running.value = true
+        pending.value = false
     }
 
     private fun showNotification() {
@@ -53,6 +53,7 @@ class Service: Service() {
         server.stop()
 
         running.value = false
+        pending.value = false
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -67,6 +68,7 @@ class Service: Service() {
     private val server = Server()
 
     companion object {
-        val running = MutableLiveData(false)
+        val pending = mutableStateOf(false)
+        val running = mutableStateOf(false)
     }
 }

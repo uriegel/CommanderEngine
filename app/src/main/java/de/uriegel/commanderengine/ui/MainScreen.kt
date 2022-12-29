@@ -10,9 +10,11 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
+import de.uriegel.commanderengine.Model
 
 @Composable
-fun MainScreen(start: ()->Unit, stop: ()->Unit) {
+fun MainScreen(start: ()->Unit, stop: ()->Unit, viewModel: Model = viewModel()) {
     Scaffold(topBar = {
         TopAppBar(title = {
             Text("Commander Engine")
@@ -20,9 +22,13 @@ fun MainScreen(start: ()->Unit, stop: ()->Unit) {
     }, content = {
         var showDialog by remember { mutableStateOf(false) }
         if (showDialog)
-            ServiceAlertDialog({ showDialog = false }) {
-                stop()
-            }
+            ServiceAlertDialog(
+                { showDialog = false },
+                {
+                    viewModel.servicePending.value = true
+                    stop()
+                }
+            )
         ConstraintLayout(modifier =
             Modifier
                 .padding(it)
@@ -32,7 +38,10 @@ fun MainScreen(start: ()->Unit, stop: ()->Unit) {
                 val (buttonStart, buttonStop) = createRefs()
 
                 Button(
-                    onClick = { start() },
+                    enabled = !viewModel.servicePending.value && !viewModel.serviceRunning.value,
+                    onClick = {
+                        viewModel.servicePending.value = true
+                        start() },
                     modifier = Modifier.constrainAs(buttonStart) {
                         top.linkTo(parent.top)
                         bottom.linkTo(buttonStop.top)
@@ -42,7 +51,8 @@ fun MainScreen(start: ()->Unit, stop: ()->Unit) {
                     Text("Start")
                 }
                 Button(
-                    onClick = {showDialog = true},
+                    enabled = !viewModel.servicePending.value && viewModel.serviceRunning.value,
+                    onClick = { showDialog = true },
                     modifier = Modifier.constrainAs(buttonStop) {
                         top.linkTo(buttonStart.bottom)
                         bottom.linkTo(parent.bottom)
