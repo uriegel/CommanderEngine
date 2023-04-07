@@ -56,7 +56,7 @@ fun Route.getFileRoute() {
 fun Route.get() {
     route("/{...}") {
         get {
-            val file = File("${Environment.getExternalStorageDirectory()}${call.request.uri}")
+            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path()}")
             if (file.exists()) {
                 call.respondFile(file)
             } else
