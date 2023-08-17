@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 fun Route.getFilesRoute() {
-    route("/getfiles") {
+    route("/remote/getfiles") {
         post {
             val params = call.receive<GetFiles>()
             val path = "${Environment.getExternalStorageDirectory()}${params.path}"
@@ -37,7 +37,7 @@ fun Route.getFilesRoute() {
 //TODO use get request
 
 fun Route.getFileRoute() {
-    route("/getfile") {
+    route("/remote/getfile") {
         post {
             val params = call.receive<GetFiles>()
             val path = "${Environment.getExternalStorageDirectory()}${params.path}"
@@ -54,9 +54,9 @@ fun Route.getFileRoute() {
 }
 
 fun Route.get() {
-    route("/{...}") {
+    route("/remote/{...}") {
         get {
-            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path()}")
+            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path().substring(7)}")
             if (file.exists()) {
                 call.respondFile(file)
             } else
@@ -66,7 +66,7 @@ fun Route.get() {
 }
 
 fun Route.postFileRoute() {
-    route("/postfile") {
+    route("/remote/postfile") {
         post {
             withContext(Dispatchers.IO) {
                 val file = File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
@@ -85,7 +85,7 @@ fun Route.postFileRoute() {
 }
 
 fun Route.getFilesInfosRoute() {
-    route("/getfilesinfos") {
+    route("/remote/getfilesinfos") {
         post {
             val params = call.receive<GetFilesInfos>()
             val infos = params.files.map {
