@@ -1,5 +1,3 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -7,7 +5,7 @@ plugins {
 
 android {
     namespace = "de.uriegel.commanderengine"
-    compileSdk = 33
+    compileSdk = 34
 
     signingConfigs {
         create("signing") {
@@ -21,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "de.uriegel.commanderengine"
         minSdk = 22
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -33,7 +31,9 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("signing")
         }
         debug {
@@ -54,10 +54,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"
     }
-    packagingOptions {
-        jniLibs {
-            excludes += "META-INF/*"
-        }
+    packaging {
         resources {
             excludes += "/META-INF/*"
         }
@@ -73,14 +70,14 @@ kotlin {
 }
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("androidx.activity:activity-compose:1.6.1")
-    implementation("androidx.compose.ui:ui:1.3.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.3.1")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation("androidx.compose.ui:ui:1.5.2")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.2")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.compose.material:material:1.3.1")
+    implementation("androidx.compose.material:material:1.5.2")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
     implementation("io.ktor:ktor:2.1.2")
     implementation("io.ktor:ktor-serialization-gson:2.1.2")
