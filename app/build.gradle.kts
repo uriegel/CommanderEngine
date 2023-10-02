@@ -77,7 +77,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.5.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.2")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.compose.material:material:1.5.2")
+    implementation("androidx.compose.material3:material3:1.1.2")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
     implementation("io.ktor:ktor:2.1.2")
     implementation("io.ktor:ktor-serialization-gson:2.1.2")
