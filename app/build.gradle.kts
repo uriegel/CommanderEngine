@@ -86,4 +86,5 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:2.1.2")
     implementation("io.ktor:ktor-server-auto-head-response:2.1.2")
     implementation("io.ktor:ktor-server-partial-content:2.1.2")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
 }
