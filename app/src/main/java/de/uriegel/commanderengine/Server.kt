@@ -1,5 +1,7 @@
 package de.uriegel.commanderengine
 
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import java.util.concurrent.TimeUnit
@@ -23,6 +25,10 @@ class Server {
         }
         install(CORS) {
             anyHost()
+            allowHeader(HttpHeaders.AccessControlAllowHeaders)
+            allowHeader(HttpHeaders.ContentType)
+            allowHeader(HttpHeaders.AccessControlAllowOrigin)
+            allowMethod(HttpMethod.Options)
         }
         install(AutoHeadResponse)
         install(PartialContent)
