@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import java.io.File
+import java.lang.Exception
 
 fun Route.getFilesRoute() {
     route("/remote/getfiles") {
@@ -28,7 +29,7 @@ fun Route.getFilesRoute() {
                         it.lastModified()
                     )
                 }
-            call.respond(items ?: listOf<File>())
+            call.respond(Result.success(items ?: listOf<File>()).toQueryResult())
         }
     }
 }
@@ -100,6 +101,19 @@ fun Route.getFilesInfosRoute() {
         }
     }
 }
+
+data class QueryResult<T, TR>(
+    val ok: T?,
+    val error: TR?,
+    val isError: Boolean?
+)
+
+fun <T> Result<T>.toQueryResult() =
+    if (this.isSuccess)
+        QueryResult<T, Exception>(this.getOrNull(), null, null)
+    else
+        QueryResult<T, Exception>(null, null, true)
+
 
 data class GetFiles(val path: String)
 data class GetFilesInfos(val files: List<String>)
