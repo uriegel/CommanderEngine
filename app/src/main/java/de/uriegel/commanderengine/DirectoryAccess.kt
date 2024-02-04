@@ -85,6 +85,17 @@ fun Route.postFileRoute() {
     }
 }
 
+fun Route.deleteFileRoute() {
+    route("/remote/deletefile") {
+        delete {
+            withContext(Dispatchers.IO) {
+                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").delete()
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+    }
+}
+
 fun Route.getFilesInfosRoute() {
     route("/remote/getfilesinfos") {
         post {

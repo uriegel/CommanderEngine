@@ -38,6 +38,7 @@ class Server {
             getFileRoute()
             getFilesInfosRoute()
             postFileRoute()
+            deleteFileRoute()
             get()
         }
     }
