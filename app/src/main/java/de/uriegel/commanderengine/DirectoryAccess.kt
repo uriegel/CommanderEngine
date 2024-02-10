@@ -1,16 +1,24 @@
 package de.uriegel.commanderengine
 
 import android.os.Environment
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import de.uriegel.commanderengine.extensions.deleteRecursive
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.header
+import io.ktor.server.request.path
+import io.ktor.server.request.receive
+import io.ktor.server.request.receiveStream
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 import java.io.File
-import java.lang.Exception
 
 fun Route.getFilesRoute() {
     route("/remote/getfiles") {
@@ -89,7 +97,7 @@ fun Route.deleteFileRoute() {
     route("/remote/deletefile") {
         delete {
             withContext(Dispatchers.IO) {
-                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").delete()
+                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").deleteRecursive()
                 call.respond(HttpStatusCode.OK)
             }
         }
