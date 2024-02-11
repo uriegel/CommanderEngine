@@ -7,7 +7,7 @@ import io.ktor.server.application.call
 import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveStream
+import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
@@ -16,6 +16,8 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.ktor.util.cio.writeChannel
+import io.ktor.utils.io.copyAndClose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -44,6 +46,7 @@ fun Route.getFilesRoute() {
 
 //TODO https://ktor.io/docs/partial-content.html#install_plugin
 //TODO use get request
+//TODO use javalin
 
 fun Route.getFileRoute() {
     route("/remote/getfile") {
@@ -78,16 +81,23 @@ fun Route.postFileRoute() {
     route("/remote/postfile") {
         post {
             withContext(Dispatchers.IO) {
-                val file = File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
-                call.receiveStream().copyTo(file.outputStream())
-                val ft =
-                    call
-                        .request
-                        .header("x-file-date")
-                        ?.toLong()
-                if (ft != null)
-                    file.setLastModified(ft)
-                call.respond(HttpStatusCode.OK)
+                try {
+                    val file =
+                        File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
+                    call.receiveChannel().copyAndClose(file.writeChannel())
+                    //call.receiveStream().copyTo(file.outputStream(), 8192)
+                    val ft =
+                        call
+                            .request
+                            .header("x-file-date")
+                            ?.toLong()
+                    if (ft != null)
+                        file.setLastModified(ft)
+                    //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
+                    call.respond(HttpStatusCode.OK)
+                } catch (_: java.lang.Exception) {
+                }
+
             }
         }
     }
