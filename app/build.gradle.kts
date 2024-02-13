@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId = "de.uriegel.commanderengine"
-        minSdk = 22
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -74,17 +74,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.compose.ui:ui:1.5.4")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
+    implementation("androidx.compose.ui:ui:1.6.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.compose.material3:material3:1.2.0")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
-    implementation("io.ktor:ktor:2.1.2")
-    implementation("io.ktor:ktor-serialization-gson:2.1.2")
-    implementation("io.ktor:ktor-server-netty:2.1.2")
-    implementation("io.ktor:ktor-server-content-negotiation:2.1.2")
-    implementation("io.ktor:ktor-server-cors:2.1.2")
-    implementation("io.ktor:ktor-server-auto-head-response:2.1.2")
-    implementation("io.ktor:ktor-server-partial-content:2.1.2")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
 }

@@ -1,147 +1,125 @@
 package de.uriegel.commanderengine
 
-import android.os.Environment
-import de.uriegel.commanderengine.extensions.deleteRecursive
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.request.header
-import io.ktor.server.request.path
-import io.ktor.server.request.receive
-import io.ktor.server.request.receiveChannel
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondFile
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
-import io.ktor.util.cio.writeChannel
-import io.ktor.utils.io.copyAndClose
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-
-fun Route.getFilesRoute() {
-    route("/remote/getfiles") {
-        post {
-            val params = call.receive<GetFiles>()
-            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-            val directory = File(path)
-            val items = directory.listFiles()
-                ?.filterNotNull()
-                ?.map {
-                    File(
-                        it.name,
-                        it.isDirectory,
-                        it.length(),
-                        it.name.startsWith('.'),
-                        it.lastModified()
-                    )
-                }
-            call.respond(Result.success(items ?: listOf<File>()).toQueryResult())
-        }
-    }
-}
-
-//TODO https://ktor.io/docs/partial-content.html#install_plugin
-//TODO use get request
-//TODO use javalin
-
-fun Route.getFileRoute() {
-    route("/remote/getfile") {
-        post {
-            val params = call.receive<GetFiles>()
-            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-            val file = File(path)
-            if (file.exists()) {
-                call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
-                call.response.header("x-file-date", "${file.lastModified()}")
-                call.respondFile(file)
-            }
-            else
-                call.respond(HttpStatusCode.NotFound)
-        }
-    }
-}
-
-fun Route.get() {
-    route("/remote/{...}") {
-        get {
-            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path().substring(7)}")
-            if (file.exists()) {
-                call.respondFile(file)
-            } else
-                call.respond(HttpStatusCode.NotFound)
-        }
-    }
-}
-
-fun Route.postFileRoute() {
-    route("/remote/postfile") {
-        post {
-            withContext(Dispatchers.IO) {
-                try {
-                    val file =
-                        File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
-                    call.receiveChannel().copyAndClose(file.writeChannel())
-                    //call.receiveStream().copyTo(file.outputStream(), 8192)
-                    val ft =
-                        call
-                            .request
-                            .header("x-file-date")
-                            ?.toLong()
-                    if (ft != null)
-                        file.setLastModified(ft)
-                    //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
-                    call.respond(HttpStatusCode.OK)
-                } catch (_: java.lang.Exception) {
-                }
-
-            }
-        }
-    }
-}
-
-fun Route.deleteFileRoute() {
-    route("/remote/deletefile") {
-        delete {
-            withContext(Dispatchers.IO) {
-                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").deleteRecursive()
-                call.respond(HttpStatusCode.OK)
-            }
-        }
-    }
-}
-
-fun Route.getFilesInfosRoute() {
-    route("/remote/getfilesinfos") {
-        post {
-            val params = call.receive<GetFilesInfos>()
-            val infos = params.files.map {
-                val path = "${Environment.getExternalStorageDirectory()}${it}"
-                val file = File(path)
-                if (file.exists())
-                    FileInfo(true, it, file.length(), file.lastModified())
-                else
-                    FileInfo(false, it, file.length(), file.lastModified())
-            }
-            call.respond(infos)
-        }
-    }
-}
-
-data class QueryResult<T, TR>(
-    val ok: T?,
-    val error: TR?,
-    val isError: Boolean?
-)
-
-fun <T> Result<T>.toQueryResult() =
-    if (this.isSuccess)
-        QueryResult<T, Exception>(this.getOrNull(), null, null)
-    else
-        QueryResult<T, Exception>(null, null, true)
+//fun Route.getFilesRoute() {
+//    route("/remote/getfiles") {
+//        post {
+//            val params = call.receive<GetFiles>()
+//            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+//            val directory = File(path)
+//            val items = directory.listFiles()
+//                ?.filterNotNull()
+//                ?.map {
+//                    File(
+//                        it.name,
+//                        it.isDirectory,
+//                        it.length(),
+//                        it.name.startsWith('.'),
+//                        it.lastModified()
+//                    )
+//                }
+//            call.respond(Result.success(items ?: listOf<File>()).toQueryResult())
+//        }
+//    }
+//}
+//
+////TODO https://ktor.io/docs/partial-content.html#install_plugin
+////TODO use get request
+////TODO use javalin
+//
+//fun Route.getFileRoute() {
+//    route("/remote/getfile") {
+//        post {
+//            val params = call.receive<GetFiles>()
+//            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
+//            val file = File(path)
+//            if (file.exists()) {
+//                call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
+//                call.response.header("x-file-date", "${file.lastModified()}")
+//                call.respondFile(file)
+//            }
+//            else
+//                call.respond(HttpStatusCode.NotFound)
+//        }
+//    }
+//}
+//
+//fun Route.get() {
+//    route("/remote/{...}") {
+//        get {
+//            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path().substring(7)}")
+//            if (file.exists()) {
+//                call.respondFile(file)
+//            } else
+//                call.respond(HttpStatusCode.NotFound)
+//        }
+//    }
+//}
+//
+//fun Route.postFileRoute() {
+//    route("/remote/postfile") {
+//        post {
+//            withContext(Dispatchers.IO) {
+//                try {
+//                    val file =
+//                        File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
+//                    call.receiveChannel().copyAndClose(file.writeChannel())
+//                    //call.receiveStream().copyTo(file.outputStream(), 8192)
+//                    val ft =
+//                        call
+//                            .request
+//                            .header("x-file-date")
+//                            ?.toLong()
+//                    if (ft != null)
+//                        file.setLastModified(ft)
+//                    //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
+//                    call.respond(HttpStatusCode.OK)
+//                } catch (_: java.lang.Exception) {
+//                }
+//
+//            }
+//        }
+//    }
+//}
+//
+//fun Route.deleteFileRoute() {
+//    route("/remote/deletefile") {
+//        delete {
+//            withContext(Dispatchers.IO) {
+//                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").deleteRecursive()
+//                call.respond(HttpStatusCode.OK)
+//            }
+//        }
+//    }
+//}
+//
+//fun Route.getFilesInfosRoute() {
+//    route("/remote/getfilesinfos") {
+//        post {
+//            val params = call.receive<GetFilesInfos>()
+//            val infos = params.files.map {
+//                val path = "${Environment.getExternalStorageDirectory()}${it}"
+//                val file = File(path)
+//                if (file.exists())
+//                    FileInfo(true, it, file.length(), file.lastModified())
+//                else
+//                    FileInfo(false, it, file.length(), file.lastModified())
+//            }
+//            call.respond(infos)
+//        }
+//    }
+//}
+//
+//data class QueryResult<T, TR>(
+//    val ok: T?,
+//    val error: TR?,
+//    val isError: Boolean?
+//)
+//
+//fun <T> Result<T>.toQueryResult() =
+//    if (this.isSuccess)
+//        QueryResult<T, Exception>(this.getOrNull(), null, null)
+//    else
+//        QueryResult<T, Exception>(null, null, true)
 
 
 data class GetFiles(val path: String)
