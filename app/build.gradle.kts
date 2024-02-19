@@ -79,4 +79,5 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.compose.material3:material3:1.2.0")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.6.1")
 }
