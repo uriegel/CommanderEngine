@@ -9,7 +9,7 @@ class Server {
     }
 
     fun stop() {
- //       server.stop()
+        server.stop()
     }
 
     private val server = HttpServer(8080)

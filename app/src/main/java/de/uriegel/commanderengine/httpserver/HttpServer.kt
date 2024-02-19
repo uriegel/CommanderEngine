@@ -1,5 +1,6 @@
 package de.uriegel.commanderengine.httpserver
 
+import android.util.Log
 import java.net.ServerSocket
 import kotlinx.coroutines.*
 import java.io.BufferedOutputStream
@@ -8,43 +9,59 @@ import java.net.Socket
 import java.util.Scanner
 
 class HttpServer(port: Int) {
-
-    private val server: ServerSocket
-
     fun start() {
-        CoroutineScope(Dispatchers.Default).async {
-            launch() {
-                while (true) {
-                    val client = server.accept()
-                    launch(Dispatchers.Default) {
-                        request(client)
+        running = true
+        CoroutineScope(Dispatchers.Default).launch {
+            Log.d("TAG", "Launch accept loop")
+            launch {
+                while (running) {
+                    try {
+                        Log.d("TAG", "before accept")
+                        val client = server.accept()
+                        Log.d("TAG", "accept")
+                        launch {
+                            request(client)
+                        }
+                    } catch (e: Exception) {
+                        val a = 0
                     }
                 }
             }
         }
     }
 
+    fun stop() {
+        running = false
+        server.close()
+    }
+
     private fun request(socket: Socket) {
         val istream = Scanner(socket.getInputStream())
         val ostream = BufferedOutputStream(socket.getOutputStream())
-        val req = istream.nextLine().split(' ')
-        val method = req[0]
-        val url = req[1]
-        val protocol = req[2]
-        val headers = readHeaderPart(istream)
+        tailrec fun nextRequest() {
+            val req = istream.nextLine().split(' ')
+            val method = req[0]
+            val url = req[1]
+            val protocol = req[2]
+            val headers = readHeaderPart(istream)
                 .map {
                     val pairs = it.split(": ")
                     val p =  Pair(pairs[0], pairs[1])
                     p
                 }
                 .toMap()
-        if (method == "OPTIONS")
-            handleOptions(headers, ostream)
-        else
-            handleRequest(headers, ostream)
+            if (method == "OPTIONS")
+                handleOptions(headers, ostream)
+            else
+                handleRequest(headers, ostream)
+            nextRequest()
+        }
+
+        nextRequest()
     }
 
     // TODO Stop (start stop service several times)
+    // TODO KeepAlive
     // TODO config allowed origin
     // TODO send origin back in answer if origin is the configured value
     // TODO send content-type in answer
@@ -90,10 +107,11 @@ class HttpServer(port: Int) {
 //            }
     }
 
+    private val server: ServerSocket
 
     init {
         server = ServerSocket(port)
     }
 
-
+    private var running = false
 }
