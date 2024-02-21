@@ -88,14 +88,13 @@ class HttpServer(private val port: Int) {
     private suspend fun handleRequest(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
         Log.d("TESTREC", "$id req")
         val msg = "HTTP/1.1 200 OK\r\n" +
-                 "Content-Length: 18\r\n" +
-
-                 "Access-Control-Allow-Origin: http://localhost:5173\r\n" +
-
-
-                 "Content-Type: application/json\r\n" +
-                 "\r\n" +
-                 "Das is der Payload"
+                "Content-Length: 18\r\n" +
+                (headers["Origin"]?.let {
+                    "Access-Control-Allow-Origin: $it\r\n"
+                } ?: "") +
+                "Content-Type: application/json\r\n" +
+                "\r\n" +
+                "Das is der Payload"
         channel.writeAsync(msg.toByteArray())
         Log.d("TESTREC", "$id req finished")
     }
@@ -103,7 +102,7 @@ class HttpServer(private val port: Int) {
     private suspend fun handleOptions(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
         Log.d("TESTREC", "$id options")
         val responseHeaders = mutableMapOf<String, String>()
-        responseHeaders["Access-Control-Allow-Origin"] = "http://localhost:5173"
+        responseHeaders["Access-Control-Allow-Origin"] = corsDomain
         responseHeaders["Access-Control-Allow-Headers"] = headers["Access-Control-Request-Headers"]!!
         responseHeaders["Access-Control-Allow-Method"] = headers["Access-Control-Request-Method"]!!
         responseHeaders["Content-Length"] = "0"
@@ -117,8 +116,6 @@ class HttpServer(private val port: Int) {
         Log.d("TESTREC", "$id options finished")
     }
 
-    // TODO config allowed origin
-    // TODO send origin back in answer if origin is the configured value
     // TODO send content-type in answer
     private fun readHeaderPart(istream: Scanner) = sequence {
         while (true) {
@@ -130,7 +127,9 @@ class HttpServer(private val port: Int) {
     }
 
     companion object {
-        var idSeed = AtomicInteger(0)
+        private var idSeed = AtomicInteger(0)
+        private val corsDomain = "http://localhost:5173"
+
     }
 
     private var listener: AsynchronousServerSocketChannel? = null
