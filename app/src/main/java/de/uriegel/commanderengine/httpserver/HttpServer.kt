@@ -18,11 +18,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
-class HttpServer(private val port: Int) {
-    fun start() {
+class HttpServer(private val builder: Builder) {
+    fun start(): HttpServer {
         listener = AsynchronousServerSocketChannel
             .open()
-            .bind(InetSocketAddress(port))
+            .bind(InetSocketAddress(builder.port))
 
         running = true
         CoroutineScope(Dispatchers.Default).launch {
@@ -35,6 +35,7 @@ class HttpServer(private val port: Int) {
                 }
             }
         }
+        return this
     }
 
     fun stop() {
@@ -102,9 +103,11 @@ class HttpServer(private val port: Int) {
     private suspend fun handleOptions(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
         Log.d("TESTREC", "$id options")
         val responseHeaders = mutableMapOf<String, String>()
-        responseHeaders["Access-Control-Allow-Origin"] = corsDomain
-        responseHeaders["Access-Control-Allow-Headers"] = headers["Access-Control-Request-Headers"]!!
-        responseHeaders["Access-Control-Allow-Method"] = headers["Access-Control-Request-Method"]!!
+        builder.corsDomain?.let{
+            responseHeaders["Access-Control-Allow-Origin"] = it
+            responseHeaders["Access-Control-Allow-Headers"] = headers["Access-Control-Request-Headers"]!!
+            responseHeaders["Access-Control-Allow-Method"] = headers["Access-Control-Request-Method"]!!
+        }
         responseHeaders["Content-Length"] = "0"
         val msg =
             "HTTP/1.1 200 OK\r\n" +
@@ -128,8 +131,6 @@ class HttpServer(private val port: Int) {
 
     companion object {
         private var idSeed = AtomicInteger(0)
-        private val corsDomain = "http://localhost:5173"
-
     }
 
     private var listener: AsynchronousServerSocketChannel? = null
