@@ -22,9 +22,7 @@ package de.uriegel.commanderengine
 //    }
 //}
 //
-////TODO https://ktor.io/docs/partial-content.html#install_plugin
 ////TODO use get request
-////TODO use javalin
 //
 //fun Route.getFileRoute() {
 //    route("/remote/getfile") {
