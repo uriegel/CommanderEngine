@@ -15,8 +15,10 @@ import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
 import java.util.Scanner
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+
 
 
 class HttpServer(port: Int) {
@@ -24,11 +26,12 @@ class HttpServer(port: Int) {
         running = true
         CoroutineScope(Dispatchers.Default).launch {
             while (running) {
-                Log.d("TAG", "before accept")
+                Log.d("TESTREC", "before accept")
                 val channel = accept()
-                Log.d("TAG", "after accept")
-                launch {
-                    request(channel)
+                Log.d("TESTREC", "after accept")
+                    CoroutineScope(Dispatchers.Default).launch {
+//                launch {
+                        request(channel)
                 }
             }
         }
@@ -56,26 +59,33 @@ class HttpServer(port: Int) {
         //server.close()
     }
 
-    private tailrec suspend fun request(channel: AsynchronousSocketChannel) {
+    private suspend fun request(channel: AsynchronousSocketChannel) {
         val buffer = ByteArray(8192)
-        read(channel, ByteBuffer.wrap(buffer))
-        val input = Scanner(ByteArrayInputStream(buffer))
+        val id = idSeed.addAndGet(1).toString()
+        tailrec suspend fun request() {
+            val count = read(channel, ByteBuffer.wrap(buffer))
+            Log.d("TESTREC", "$id After read: $count")
 
-        val req = input.nextLine().split(' ')
-        val method = req[0]
-        val url = req[1]
-        val headers = readHeaderPart(input)
-            .map {
-                val pairs = it.split(": ")
-                val p =  Pair(pairs[0], pairs[1])
-                p
-            }
-            .toMap()
-        if (method == "OPTIONS")
-            handleOptions(headers, channel)
-        else
-            handleRequest(headers, channel)
-        request(channel)
+            // TODO count -1 close socket
+            val input = Scanner(ByteArrayInputStream(buffer))
+
+            val req = input.nextLine().split(' ')
+            val method = req[0]
+            val url = req[1]
+            val headers = readHeaderPart(input)
+                .map {
+                    val pairs = it.split(": ")
+                    val p = Pair(pairs[0], pairs[1])
+                    p
+                }
+                .toMap()
+            if (method == "OPTIONS")
+                handleOptions(id, headers, channel)
+            else
+                handleRequest(id, headers, channel)
+            request()
+        }
+        request()
     }
 
     private suspend fun accept(): AsynchronousSocketChannel = suspendCoroutine {
@@ -83,7 +93,9 @@ class HttpServer(port: Int) {
             override fun completed(ch: AsynchronousSocketChannel, att: Void?) {
                 it.resume(ch)
             }
-            override fun failed(exc: Throwable, att: Void?) { }
+            override fun failed(exc: Throwable, att: Void?) {
+                Log.d("TESTREC", "Error accept")
+            }
         })
     }
 
@@ -92,7 +104,9 @@ class HttpServer(port: Int) {
             override fun completed(count: Int, att: Void?) {
                 it.resume(count)
             }
-            override fun failed(exc: Throwable, att: Void?) { }
+            override fun failed(exc: Throwable, att: Void?) {
+                Log.d("TESTREC", "Error read")
+            }
         })
     }
 
@@ -101,7 +115,9 @@ class HttpServer(port: Int) {
             override fun completed(count: Int, att: Void?) {
                 it.resume(count)
             }
-            override fun failed(exc: Throwable, att: Void?) { }
+            override fun failed(exc: Throwable, att: Void?) {
+                Log.d("TESTREC", "Error write")
+            }
         })
     }
 
@@ -149,7 +165,8 @@ class HttpServer(port: Int) {
         }
     }
 
-    private suspend fun handleRequest(headers: Map<String, String>, channel: AsynchronousSocketChannel) {
+    private suspend fun handleRequest(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
+        Log.d("TESTREC", "$id req")
         val msg = "HTTP/1.1 200 OK\r\n" +
                  "Content-Length: 18\r\n" +
 
@@ -160,19 +177,27 @@ class HttpServer(port: Int) {
                  "\r\n" +
                  "Das is der Payload"
         write(channel, msg.toByteArray())
+        Log.d("TESTREC", "$id req finished")
     }
 
-    private suspend fun handleOptions(headers: Map<String, String>, channel: AsynchronousSocketChannel) {
+    private suspend fun handleOptions(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
+        Log.d("TESTREC", "$id options")
         val responseHeaders = mutableMapOf<String, String>()
         responseHeaders["Access-Control-Allow-Origin"] = "http://localhost:5173"
         responseHeaders["Access-Control-Allow-Headers"] = headers["Access-Control-Request-Headers"]!!
         responseHeaders["Access-Control-Allow-Method"] = headers["Access-Control-Request-Method"]!!
+        responseHeaders["Content-Length"] = "0"
         val msg = "HTTP/1.1 200 OK\r\n" +
                     responseHeaders
                     .map { it.key + ": " + it.value}
                     .joinToString("\r\n") +
                 "\r\n\r\n"
         write(channel, msg.toByteArray())
+        Log.d("TESTREC", "$id options finished")
+    }
+
+    companion object {
+        var idSeed = AtomicInteger(0)
     }
 
     val listener = AsynchronousServerSocketChannel
