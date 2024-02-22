@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization") version embeddedKotlinVersion
 }
 
 android {
@@ -79,5 +80,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.compose.material3:material3:1.2.0")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     debugImplementation("androidx.compose.ui:ui-tooling:1.6.1")
 }
