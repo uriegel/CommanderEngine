@@ -1,27 +1,30 @@
 package de.uriegel.commanderengine
 
-//fun Route.getFilesRoute() {
-//    route("/remote/getfiles") {
-//        post {
-//            val params = call.receive<GetFiles>()
-//            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-//            val directory = File(path)
-//            val items = directory.listFiles()
-//                ?.filterNotNull()
-//                ?.map {
-//                    File(
-//                        it.name,
-//                        it.isDirectory,
-//                        it.length(),
-//                        it.name.startsWith('.'),
-//                        it.lastModified()
-//                    )
-//                }
-//            call.respond(Result.success(items ?: listOf<File>()).toQueryResult())
-//        }
-//    }
-//}
-//
+import android.os.Environment
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
+
+fun getFilesRoute(urlPath: String): String {
+    val path = "${Environment.getExternalStorageDirectory()}${urlPath}"
+    val directory = File(path)
+    return Json.encodeToString(
+            directory
+                .listFiles()
+                ?.filterNotNull()
+                ?.map {
+                    FileItem(
+                        it.name,
+                        it.isDirectory,
+                        it.length(),
+                        it.name.startsWith('.'),
+                        it.lastModified()
+                    )
+                }
+                ?: listOf<FileItem>())
+}
+
 ////TODO use get request
 //
 //fun Route.getFileRoute() {
@@ -120,7 +123,8 @@ package de.uriegel.commanderengine
 //        QueryResult<T, Exception>(null, null, true)
 
 
-data class GetFiles(val path: String)
-data class GetFilesInfos(val files: List<String>)
-data class File(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
-data class FileInfo(val exists: Boolean, val file: String, val size: Long, val time: Long)
+//data class GetFiles(val path: String)
+//data class GetFilesInfos(val files: List<String>)
+@Serializable
+data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
+//data class FileInfo(val exists: Boolean, val file: String, val size: Long, val time: Long)

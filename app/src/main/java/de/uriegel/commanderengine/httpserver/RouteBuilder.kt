@@ -5,13 +5,13 @@ class RouteBuilder() {
     fun request(url: String, sendJson: (json: String)->String?) =
         jsons.keys.firstOrNull{ url.startsWith(it) }?.let {
             jsons[it]
-                ?.invoke()
+                ?.invoke(url)
                 ?.let(sendJson)
         }
 
-    fun <T> json(path: String, initializer: () -> T) {
-        jsons[path] = ({ initializer().toString()})
+    fun json(path: String, initializer: (url: String) -> String) {
+        jsons[path] = ({ initializer(it)})
     }
 
-    private val jsons = mutableMapOf<String, ()->String>()
+    private val jsons = mutableMapOf<String, (url: String)->String>()
 }

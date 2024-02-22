@@ -24,6 +24,9 @@ class Server {
                         val data = Data("path/url2", "Fredy Riegel", 1211)
                         Json.encodeToString(data)
                     }
+                    json("/getfiles") {
+                        getFilesRoute(it.substring(9))
+                    }
                 }
             }
         }
