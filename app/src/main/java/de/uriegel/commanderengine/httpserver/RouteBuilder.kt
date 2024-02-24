@@ -2,11 +2,13 @@ package de.uriegel.commanderengine.httpserver
 
 class RouteBuilder() {
 
-    fun request(url: String, sendJson: (json: String)->String?) =
+    fun request(url: String) =
         jsons.keys.firstOrNull{ url.startsWith(it) }?.let {
             jsons[it]
                 ?.invoke(url)
-                ?.let(sendJson)
+                ?.let{
+                    RequestResult(it.toByteArray(), "application/json")
+                }
         }
 
     fun json(path: String, initializer: (url: String) -> String) {

@@ -90,20 +90,27 @@ class HttpServer(private val builder: Builder) {
     private suspend fun route(method: String, headers: Map<String, String>, url: String,
                               channel: AsynchronousSocketChannel): Boolean {
         if (method == "GET")
-            builder.routing?.get?.request(url) {
-                "HTTP/1.1 200 OK\r\n" +
-                        "Content-Length: ${it.length}\r\n" +
-                        (headers["Origin"]?.let {
-                            "Access-Control-Allow-Origin: $it\r\n"
-                        } ?: "") +
-                        "Content-Type: application/json\r\n" +
-                        "\r\n" +
-                        it
-
-            }?.let {
-                channel.writeAsync(it.toByteArray())
-            }
+            builder
+                .routing
+                ?.get
+                ?.request(url)
+                ?.let {
+                    handleBytes(channel, headers, it.contentType, it.bytes)
+                }
         return false
+    }
+
+    private suspend fun handleBytes(channel: AsynchronousSocketChannel, headers: Map<String, String>,
+                                    contentType: String, bytes: ByteArray) {
+        val headerBytes = "HTTP/1.1 200 OK\r\n" +
+                "Content-Length: ${bytes.size}\r\n" +
+                (headers["Origin"]?.let {
+                    "Access-Control-Allow-Origin: $it\r\n"
+                } ?: "") +
+                "Content-Type: $contentType\r\n" +
+                "\r\n"
+        channel.writeAsync(headerBytes.toByteArray())
+        channel.writeAsync(bytes)
     }
 
     private suspend fun handleNotFound(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {

@@ -10,19 +10,21 @@ fun getFilesRoute(urlPath: String): String {
     val path = "${Environment.getExternalStorageDirectory()}${urlPath}"
     val directory = File(path)
     return Json.encodeToString(
-            directory
-                .listFiles()
-                ?.filterNotNull()
-                ?.map {
-                    FileItem(
-                        it.name,
-                        it.isDirectory,
-                        it.length(),
-                        it.name.startsWith('.'),
-                        it.lastModified()
-                    )
-                }
-                ?: listOf<FileItem>())
+        ResultItem.ok(
+            Result.success(
+                directory
+                    .listFiles()
+                    ?.filterNotNull()
+                    ?.map {
+                        FileItem(
+                            it.name,
+                            it.isDirectory,
+                            it.length(),
+                            it.name.startsWith('.'),
+                            it.lastModified()
+                        )
+                    }
+                    ?: listOf<FileItem>())))
 }
 
 ////TODO use get request
@@ -128,3 +130,21 @@ fun getFilesRoute(urlPath: String): String {
 @Serializable
 data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
 //data class FileInfo(val exists: Boolean, val file: String, val size: Long, val time: Long)
+
+@Serializable
+data class ResultItem<T>(val ok: T?) {
+
+    companion object {
+        fun <T> ok(value: Result<T>): ResultItem<T> =
+            ResultItem(value.getOrNull())
+    }
+}
+
+//@Serializable
+//data class ResultItem<T>(val isError: Boolean?, val ok: T?) {
+//
+//    companion object {
+//        fun <T> ok(value: Result<T>): ResultItem<T> =
+//            ResultItem(null, value.getOrNull())
+//    }
+//}
