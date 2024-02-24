@@ -34,25 +34,14 @@ fun getFileRoute(urlPath: String, context: HttpContext) {
     val path = "${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?')
     val file = File(path)
     if (file.exists()) {
-        ////        call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
-        ////        call.response.header("x-file-date", "${file.lastModified()}")
-        context.sendStream(file.inputStream(), file.length())
+        val headers = mutableMapOf(
+            "Content-Disposition" to "attachment; filename=\"${file.name}\"",
+            "x-file-date" to "${file.lastModified()}")
+        context.sendStream(file.inputStream(), file.length(), headers)
     }
     else
         context.sendNotFound()
 }
-//
-//fun Route.get() {
-//    route("/remote/{...}") {
-//        get {
-//            val file = File("${Environment.getExternalStorageDirectory()}${call.request.path().substring(7)}")
-//            if (file.exists()) {
-//                call.respondFile(file)
-//            } else
-//                call.respond(HttpStatusCode.NotFound)
-//        }
-//    }
-//}
 //
 //fun Route.postFileRoute() {
 //    route("/remote/postfile") {
@@ -91,36 +80,6 @@ fun getFileRoute(urlPath: String, context: HttpContext) {
 //    }
 //}
 //
-//fun Route.getFilesInfosRoute() {
-//    route("/remote/getfilesinfos") {
-//        post {
-//            val params = call.receive<GetFilesInfos>()
-//            val infos = params.files.map {
-//                val path = "${Environment.getExternalStorageDirectory()}${it}"
-//                val file = File(path)
-//                if (file.exists())
-//                    FileInfo(true, it, file.length(), file.lastModified())
-//                else
-//                    FileInfo(false, it, file.length(), file.lastModified())
-//            }
-//            call.respond(infos)
-//        }
-//    }
-//}
-//
-//data class QueryResult<T, TR>(
-//    val ok: T?,
-//    val error: TR?,
-//    val isError: Boolean?
-//)
-//
-//fun <T> Result<T>.toQueryResult() =
-//    if (this.isSuccess)
-//        QueryResult<T, Exception>(this.getOrNull(), null, null)
-//    else
-//        QueryResult<T, Exception>(null, null, true)
-
-
 //data class GetFiles(val path: String)
 //data class GetFilesInfos(val files: List<String>)
 @Serializable
@@ -136,11 +95,3 @@ data class ResultItem<T>(val ok: T?) {
     }
 }
 
-//@Serializable
-//data class ResultItem<T>(val isError: Boolean?, val ok: T?) {
-//
-//    companion object {
-//        fun <T> ok(value: Result<T>): ResultItem<T> =
-//            ResultItem(null, value.getOrNull())
-//    }
-//}

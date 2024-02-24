@@ -31,19 +31,6 @@ class Server {
     }
 
     private var server: HttpServer? = null
-//            .get("/remote/getfiles{path}") {
-//                val email = it.pathParam("path")
-//            }
-
-//        routing {
-//            getFilesRoute()
-//            getFileRoute()
-//            getFilesInfosRoute()
-//            postFileRoute()
-//            deleteFileRoute()
-//            get()
-//        }
-//    }
 }
 
 // TODO Delete Directory

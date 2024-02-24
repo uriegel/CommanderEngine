@@ -80,7 +80,7 @@ class HttpServer(private val builder: Builder) {
                     ?.request(HttpContext(
                         url,
                         { sendJson(ostream, headers, it)},
-                        { istream, size -> sendStream(ostream, headers, size, istream) },
+                        { istream, size, responseHheaders -> sendStream(ostream, headers, size, istream, responseHheaders) },
                         { sendNotFound(ostream, headers)}
                     ))
 
@@ -97,17 +97,20 @@ class HttpServer(private val builder: Builder) {
         handleBytes(ostream, headers, "application/json", json.toByteArray())
 
     private fun sendStream(outputStream: OutputStream, headers: Map<String, String>,
-                                   size: Long, stream: InputStream) {
-        val headerBytes = "HTTP/1.1 200 OK\r\n" +
-                "Content-Length: ${size}\r\n" +
-                (headers["Origin"]?.let {
-                    "Access-Control-Allow-Origin: $it\r\n"
-                } ?: "") +
-//                "Content-Type: $contentType\r\n" +
-                "\r\n"
-        outputStream.write(headerBytes.toByteArray())
-        val buffer = ByteArray(8192)
+                                   size: Long, stream: InputStream, responseHeaders: MutableMap<String, String>) {
+        responseHeaders["Content-Length"] = "${size}"
+        //responseHeaders["Content-Type"] = ""
 
+        val msg =
+            "HTTP/1.1 200 OK\r\n" +
+                    responseHeaders
+                        .map { it.key + ": " + it.value}
+                        .joinToString("\r\n") +
+                    "\r\n\r\n"
+
+        outputStream.write(msg.toByteArray())
+
+        val buffer = ByteArray(8192)
         tailrec fun sendBytes() {
             val length = stream.read(buffer)
             if (length > 0) {
@@ -200,5 +203,5 @@ class HttpServer(private val builder: Builder) {
 data class HttpContext(
     val url: String,
     val sendJson: (json: String)->Unit,
-    val sendStream: (stream: InputStream, size: Long)->Unit,
+    val sendStream: (stream: InputStream, size: Long, headers: MutableMap<String, String>)->Unit,
     val sendNotFound: ()->Unit)
