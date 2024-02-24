@@ -13,8 +13,11 @@ class Server {
             corsDomain("http://localhost:5173")
             routing {
                 get {
-                    json("/getfiles") {
-                        getFilesRoute(it.substring(9))
+                    request("/getfiles") {
+                        (getFilesRoute(it.url.substring(9), it))
+                    }
+                    request("/getfile") {
+                        getFileRoute(it.url.substring(8), it)
                     }
                 }
             }

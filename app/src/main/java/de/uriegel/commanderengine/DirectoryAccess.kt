@@ -1,50 +1,47 @@
 package de.uriegel.commanderengine
 
 import android.os.Environment
+import de.uriegel.commanderengine.extensions.cutAt
+import de.uriegel.commanderengine.httpserver.HttpContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.InputStream
 
-fun getFilesRoute(urlPath: String): String {
+suspend fun getFilesRoute(urlPath: String, context: HttpContext) {
     val path = "${Environment.getExternalStorageDirectory()}${urlPath}"
     val directory = File(path)
-    return Json.encodeToString(
-        ResultItem.ok(
-            Result.success(
-                directory
-                    .listFiles()
-                    ?.filterNotNull()
-                    ?.map {
-                        FileItem(
-                            it.name,
-                            it.isDirectory,
-                            it.length(),
-                            it.name.startsWith('.'),
-                            it.lastModified()
-                        )
-                    }
-                    ?: listOf<FileItem>())))
+    context.sendJson(
+        Json.encodeToString(
+            ResultItem.ok(
+                Result.success(
+                    directory
+                        .listFiles()
+                        ?.filterNotNull()
+                        ?.map {
+                            FileItem(
+                                it.name,
+                                it.isDirectory,
+                                it.length(),
+                                it.name.startsWith('.'),
+                                it.lastModified()
+                            )
+                        }
+                        ?: listOf()))))
 }
 
-////TODO use get request
-//
-//fun Route.getFileRoute() {
-//    route("/remote/getfile") {
-//        post {
-//            val params = call.receive<GetFiles>()
-//            val path = "${Environment.getExternalStorageDirectory()}${params.path}"
-//            val file = File(path)
-//            if (file.exists()) {
-//                call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
-//                call.response.header("x-file-date", "${file.lastModified()}")
-//                call.respondFile(file)
-//            }
-//            else
-//                call.respond(HttpStatusCode.NotFound)
-//        }
-//    }
-//}
+suspend fun getFileRoute(urlPath: String, context: HttpContext) {
+    val path = "${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?')
+    val file = File(path)
+    if (file.exists()) {
+        ////        call.response.header("Content-Disposition", "attachment; filename=\"${file.name}\"")
+        ////        call.response.header("x-file-date", "${file.lastModified()}")
+        context.sendStream(file.inputStream(), file.length())
+    }
+    else
+        context.sendNotFound()
+}
 //
 //fun Route.get() {
 //    route("/remote/{...}") {

@@ -2,18 +2,24 @@ package de.uriegel.commanderengine.httpserver
 
 class RouteBuilder() {
 
-    fun request(url: String) =
-        jsons.keys.firstOrNull{ url.startsWith(it) }?.let {
-            jsons[it]
-                ?.invoke(url)
-                ?.let{
-                    RequestResult(it.toByteArray(), "application/json")
-                }
-        }
+    suspend fun request(context: HttpContext) =
+        if (requests
+            .keys
+            .firstOrNull{ context.url.startsWith(it) }
+            ?.let {
+                requests[it]
+                    ?.invoke(context)
+                    ?.let{
+                        true
+                    }
+            } == true)
+            null
+        else
+            this
 
-    fun json(path: String, initializer: (url: String) -> String) {
-        jsons[path] = ({ initializer(it)})
+    fun request(path: String, initializer: suspend (context: HttpContext)->Unit) {
+        requests[path] = ({ initializer(it)})
     }
 
-    private val jsons = mutableMapOf<String, (url: String)->String>()
+    private val requests = mutableMapOf<String, suspend (context: HttpContext)->Unit>()
 }
