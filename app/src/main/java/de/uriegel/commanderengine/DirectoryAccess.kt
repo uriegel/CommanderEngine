@@ -7,9 +7,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.io.InputStream
 
-suspend fun getFilesRoute(urlPath: String, context: HttpContext) {
+fun getFilesRoute(urlPath: String, context: HttpContext) {
     val path = "${Environment.getExternalStorageDirectory()}${urlPath}"
     val directory = File(path)
     context.sendJson(
@@ -31,7 +30,7 @@ suspend fun getFilesRoute(urlPath: String, context: HttpContext) {
                         ?: listOf()))))
 }
 
-suspend fun getFileRoute(urlPath: String, context: HttpContext) {
+fun getFileRoute(urlPath: String, context: HttpContext) {
     val path = "${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?')
     val file = File(path)
     if (file.exists()) {

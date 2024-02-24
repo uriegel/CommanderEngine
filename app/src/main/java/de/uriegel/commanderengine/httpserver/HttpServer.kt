@@ -1,37 +1,29 @@
 package de.uriegel.commanderengine.httpserver
 
-import android.util.Log
-import de.uriegel.commanderengine.extensions.readAsync
-import de.uriegel.commanderengine.extensions.writeAsync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.ByteArrayInputStream
+import java.io.BufferedOutputStream
 import java.io.InputStream
-import java.net.InetSocketAddress
-import java.net.URLDecoder
-import java.nio.ByteBuffer
-import java.nio.channels.AsynchronousServerSocketChannel
-import java.nio.channels.AsynchronousSocketChannel
-import java.nio.channels.CompletionHandler
+import java.io.OutputStream
+import java.net.ServerSocket
+import java.net.Socket
 import java.util.Scanner
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-
 
 class HttpServer(private val builder: Builder) {
     fun start(): HttpServer {
-        listener = AsynchronousServerSocketChannel
-            .open()
-            .bind(InetSocketAddress(builder.port))
-
         running = true
-        CoroutineScope(Dispatchers.Default).launch {
+
+        CoroutineScope(Dispatchers.IO).launch {
             while (running) {
-                val channel = accept()
-                CoroutineScope(Dispatchers.Default).launch {
-                    request(channel)
+                try {
+                    val client = server.accept()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        request(client)
+                    }
+                } catch (e: Exception) {
+                    break
                 }
             }
         }
@@ -40,61 +32,56 @@ class HttpServer(private val builder: Builder) {
 
     fun stop() {
         running = false
-        listener?.close()
+        server.close()
     }
 
-    private suspend fun accept(): AsynchronousSocketChannel = suspendCoroutine {
-        listener?.accept(null, object: CompletionHandler<AsynchronousSocketChannel,Void?> {
-            override fun completed(ch: AsynchronousSocketChannel, att: Void?) {
-                it.resume(ch)
-            }
-            override fun failed(exc: Throwable, att: Void?) {
-            }
-        })
-    }
-
-    private suspend fun request(channel: AsynchronousSocketChannel) {
-        val buffer = ByteArray(8192)
+    private fun request(client: Socket) {
         val id = idSeed.addAndGet(1).toString()
-        tailrec suspend fun request() {
-            val count = channel.readAsync(ByteBuffer.wrap(buffer))
+        val istream = Scanner(client.getInputStream())
+        val ostream = BufferedOutputStream(client.getOutputStream())
 
-            if (!running || count == -1) {
-                channel.close()
+        tailrec fun nextRequest() {
+            try {
+                if (!running) {
+                    client.close()
+                    return
+                }
+
+                val req = istream.nextLine().split(' ')
+                val method = req[0]
+                val url = req[1]
+                val protocol = req[2]
+                val headers = readHeaderPart(istream)
+                    .map {
+                        val pairs = it.split(": ")
+                        val p = Pair(pairs[0], pairs[1])
+                        p
+                    }
+                    .toMap()
+                if (method == "OPTIONS")
+                    handleOptions(id, headers, ostream)
+                else if (!route(method, headers, url, ostream))
+                    sendNotFound(ostream, headers)
+                ostream.flush()
+            } catch(e: Exception) {
                 return
             }
-
-            val input = Scanner(ByteArrayInputStream(buffer))
-            val req = input.nextLine().split(' ')
-            val method = req[0]
-            val url = URLDecoder.decode(req[1], "UTF-8")
-            val headers = readHeaderPart(input)
-                .map {
-                    val pairs = it.split(": ")
-                    val p = Pair(pairs[0], pairs[1])
-                    p
-                }
-                .toMap()
-            if (method == "OPTIONS")
-                handleOptions(id, headers, channel)
-            else if (!route(method, headers, url, channel))
-                sendNotFound(channel, headers)
-            request()
+            nextRequest()
         }
-        request()
+        nextRequest()
     }
 
-    private suspend fun route(method: String, headers: Map<String, String>, url: String,
-                              channel: AsynchronousSocketChannel): Boolean {
+    private fun route(method: String, headers: Map<String, String>, url: String,
+                              ostream: OutputStream): Boolean {
         if (method == "GET") {
             builder
                 .routing
                 ?.get
                     ?.request(HttpContext(
                         url,
-                        { sendJson(channel, headers, it)},
-                        { istream, size -> sendStream(channel, headers, size, istream) },
-                        { sendNotFound(channel, headers)}
+                        { sendJson(ostream, headers, it)},
+                        { istream, size -> sendStream(ostream, headers, size, istream) },
+                        { sendNotFound(ostream, headers)}
                     ))
 
             ?: builder
@@ -105,11 +92,11 @@ class HttpServer(private val builder: Builder) {
         return false
     }
 
-    private suspend fun sendJson(channel: AsynchronousSocketChannel, headers: Map<String, String>,
+    private fun sendJson(ostream: OutputStream, headers: Map<String, String>,
                                  json: String) =
-        handleBytes(channel, headers, "application/json", json.toByteArray())
+        handleBytes(ostream, headers, "application/json", json.toByteArray())
 
-    private suspend fun sendStream(channel: AsynchronousSocketChannel, headers: Map<String, String>,
+    private fun sendStream(outputStream: OutputStream, headers: Map<String, String>,
                                    size: Long, stream: InputStream) {
         val headerBytes = "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: ${size}\r\n" +
@@ -118,26 +105,20 @@ class HttpServer(private val builder: Builder) {
                 } ?: "") +
 //                "Content-Type: $contentType\r\n" +
                 "\r\n"
-        channel.writeAsync(headerBytes.toByteArray())
+        outputStream.write(headerBytes.toByteArray())
         val buffer = ByteArray(8192)
 
-        tailrec suspend fun sendBytes() {
+        tailrec fun sendBytes() {
             val length = stream.read(buffer)
-            if (length < 8192) {
-                val affe = 9
-                Log.d("TESTREC", "Error write")
-                val a = affe
-
-            }
             if (length > 0) {
-                channel.writeAsync(buffer, 0, length)
+                outputStream.write(buffer, 0, length)
                 sendBytes()
             }
         }
         sendBytes()
     }
 
-    private suspend fun handleBytes(channel: AsynchronousSocketChannel, headers: Map<String, String>,
+    private fun handleBytes(outputStream: OutputStream, headers: Map<String, String>,
                                     contentType: String, bytes: ByteArray) {
         val headerBytes = "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: ${bytes.size}\r\n" +
@@ -146,11 +127,11 @@ class HttpServer(private val builder: Builder) {
                 } ?: "") +
                 "Content-Type: $contentType\r\n" +
                 "\r\n"
-        channel.writeAsync(headerBytes.toByteArray())
-        channel.writeAsync(bytes)
+        outputStream.write(headerBytes.toByteArray())
+        outputStream.write(bytes)
     }
 
-    private suspend fun sendNotFound(channel: AsynchronousSocketChannel, headers: Map<String, String>) {
+    private fun sendNotFound(ostream: OutputStream, headers: Map<String, String>) {
         val payload = """
             <html><head><meta http-equiv="Content-Type" content="text/html"/>
             <title>404 - File not found</title>
@@ -178,10 +159,10 @@ class HttpServer(private val builder: Builder) {
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 payload
-        channel.writeAsync(msg.toByteArray())
+        ostream.write(msg.toByteArray())
     }
 
-    private suspend fun handleOptions(id: String, headers: Map<String, String>, channel: AsynchronousSocketChannel) {
+    private fun handleOptions(id: String, headers: Map<String, String>, ostream: OutputStream) {
         val responseHeaders = mutableMapOf<String, String>()
         builder.corsDomain?.let{
             responseHeaders["Access-Control-Allow-Origin"] = it
@@ -195,7 +176,7 @@ class HttpServer(private val builder: Builder) {
                 .map { it.key + ": " + it.value}
                 .joinToString("\r\n") +
             "\r\n\r\n"
-        channel.writeAsync(msg.toByteArray())
+        ostream.write(msg.toByteArray())
     }
 
     private fun readHeaderPart(istream: Scanner) = sequence {
@@ -207,17 +188,17 @@ class HttpServer(private val builder: Builder) {
         }
     }
 
+    private val server: ServerSocket = ServerSocket(builder.port)
+
     companion object {
         private var idSeed = AtomicInteger(0)
     }
 
-    private var listener: AsynchronousServerSocketChannel? = null
     private var running = false
 }
 
-class HttpContext(
+data class HttpContext(
     val url: String,
-    val sendJson: suspend (json: String)->Unit,
-    val sendStream: suspend (stream: InputStream, size: Long)->Unit,
-    val sendNotFound: suspend ()->Unit) {
-}
+    val sendJson: (json: String)->Unit,
+    val sendStream: (stream: InputStream, size: Long)->Unit,
+    val sendNotFound: ()->Unit)
