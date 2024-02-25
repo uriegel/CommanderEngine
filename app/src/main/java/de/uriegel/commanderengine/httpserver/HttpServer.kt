@@ -1,5 +1,6 @@
 package de.uriegel.commanderengine.httpserver
 
+import de.uriegel.commanderengine.extensions.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -8,7 +9,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
-import java.util.Scanner
 import java.util.concurrent.atomic.AtomicInteger
 
 class HttpServer(private val builder: Builder) {
@@ -37,7 +37,7 @@ class HttpServer(private val builder: Builder) {
 
     private fun request(client: Socket) {
         val id = idSeed.addAndGet(1).toString()
-        val istream = Scanner(client.getInputStream())
+        val istream = HttpInputStream(client.getInputStream())
         val ostream = BufferedOutputStream(client.getOutputStream())
 
         tailrec fun nextRequest() {
@@ -60,7 +60,7 @@ class HttpServer(private val builder: Builder) {
                     .toMap()
                 if (method == "OPTIONS")
                     handleOptions(id, headers, ostream)
-                else if (!route(method, headers, url, ostream))
+                else if (!route(method, headers, url, istream, ostream))
                     sendNotFound(ostream, headers)
                 ostream.flush()
             } catch(e: Exception) {
@@ -72,22 +72,33 @@ class HttpServer(private val builder: Builder) {
     }
 
     private fun route(method: String, headers: Map<String, String>, url: String,
-                              ostream: OutputStream): Boolean {
+                      httpInputStream: HttpInputStream, ostream: OutputStream): Boolean {
+        var finished = false
         if (method == "GET") {
+            finished = builder
+                .routing
+                ?.get
+                ?.request(HttpContext(
+                    url,
+                    { sendJson(ostream, headers, it) },
+                    { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
+                        filename ,istream, responseHeaders) },
+                    { receivedStream -> postStream(httpInputStream, receivedStream)},
+                    { sendNotFound(ostream, headers) }
+                )) == null
+        }
+        if (!finished && method == "POST") {
             builder
                 .routing
-                ?.get
-                    ?.request(HttpContext(
-                        url,
-                        { sendJson(ostream, headers, it)},
-                        { istream, size, responseHheaders -> sendStream(ostream, headers, size, istream, responseHheaders) },
-                        { sendNotFound(ostream, headers)}
-                    ))
-
-            ?: builder
-                .routing
-                ?.get
-
+                ?.post
+                ?.request(HttpContext(
+                    url,
+                    { sendJson(ostream, headers, it) },
+                    { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
+                        filename ,istream, responseHeaders) },
+                    { receivedStream -> postStream(httpInputStream, receivedStream)},
+                    { sendNotFound(ostream, headers) }
+                ))
         }
         return false
     }
@@ -96,10 +107,13 @@ class HttpServer(private val builder: Builder) {
                                  json: String) =
         handleBytes(ostream, headers, "application/json", json.toByteArray())
 
-    private fun sendStream(outputStream: OutputStream, headers: Map<String, String>,
-                                   size: Long, stream: InputStream, responseHeaders: MutableMap<String, String>) {
+    private fun sendStream(httpOutputStream: OutputStream, headers: Map<String, String>,
+                           size: Long, fileName: String,
+                           stream: InputStream, responseHeaders: MutableMap<String, String>) {
         responseHeaders["Content-Length"] = "${size}"
-        //responseHeaders["Content-Type"] = ""
+        fileName.contentType()?.also {
+            responseHeaders["Content-Type"] = it
+        }
 
         val msg =
             "HTTP/1.1 200 OK\r\n" +
@@ -108,21 +122,25 @@ class HttpServer(private val builder: Builder) {
                         .joinToString("\r\n") +
                     "\r\n\r\n"
 
-        outputStream.write(msg.toByteArray())
+        httpOutputStream.write(msg.toByteArray())
 
         val buffer = ByteArray(8192)
         tailrec fun sendBytes() {
             val length = stream.read(buffer)
             if (length > 0) {
-                outputStream.write(buffer, 0, length)
+                httpOutputStream.write(buffer, 0, length)
                 sendBytes()
             }
         }
         sendBytes()
     }
 
+    private fun postStream(httpInputStream: HttpInputStream, outputStream: OutputStream) {
+
+    }
+
     private fun handleBytes(outputStream: OutputStream, headers: Map<String, String>,
-                                    contentType: String, bytes: ByteArray) {
+            contentType: String, bytes: ByteArray) {
         val headerBytes = "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: ${bytes.size}\r\n" +
                 (headers["Origin"]?.let {
@@ -182,7 +200,7 @@ class HttpServer(private val builder: Builder) {
         ostream.write(msg.toByteArray())
     }
 
-    private fun readHeaderPart(istream: Scanner) = sequence {
+    private fun readHeaderPart(istream: HttpInputStream) = sequence {
         while (true) {
             val line = istream.nextLine()
             if (line.isEmpty())
@@ -203,5 +221,7 @@ class HttpServer(private val builder: Builder) {
 data class HttpContext(
     val url: String,
     val sendJson: (json: String)->Unit,
-    val sendStream: (stream: InputStream, size: Long, headers: MutableMap<String, String>)->Unit,
+    val sendStream: (stream: InputStream, size: Long, fileName: String,
+                     headers: MutableMap<String, String>)->Unit,
+    val postStream: (stream: OutputStream)->Unit,
     val sendNotFound: ()->Unit)

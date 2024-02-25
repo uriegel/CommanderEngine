@@ -20,6 +20,11 @@ class Server {
                         getFileRoute(it.url.substring(8), it)
                     }
                 }
+                post {
+                    request("/postfile") {
+                        postFileRoute(it.url.substring(9), it)
+                    }
+                }
             }
         }
             .build()

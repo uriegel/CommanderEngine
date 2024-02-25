@@ -31,25 +31,22 @@ fun getFilesRoute(urlPath: String, context: HttpContext) {
 }
 
 fun getFileRoute(urlPath: String, context: HttpContext) {
-    val path = "${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?')
-    val file = File(path)
+    val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
     if (file.exists()) {
         val headers = mutableMapOf(
             "Content-Disposition" to "attachment; filename=\"${file.name}\"",
             "x-file-date" to "${file.lastModified()}")
-        context.sendStream(file.inputStream(), file.length(), headers)
+        context.sendStream(file.inputStream(), file.length(), file.name, headers)
     }
     else
         context.sendNotFound()
 }
-//
-//fun Route.postFileRoute() {
-//    route("/remote/postfile") {
-//        post {
-//            withContext(Dispatchers.IO) {
-//                try {
-//                    val file =
-//                        File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}")
+
+fun postFileRoute(urlPath: String, context: HttpContext) {
+    try {
+        val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
+
+        context.postStream(file.outputStream())
 //                    call.receiveChannel().copyAndClose(file.writeChannel())
 //                    //call.receiveStream().copyTo(file.outputStream(), 8192)
 //                    val ft =
@@ -61,13 +58,11 @@ fun getFileRoute(urlPath: String, context: HttpContext) {
 //                        file.setLastModified(ft)
 //                    //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
 //                    call.respond(HttpStatusCode.OK)
-//                } catch (_: java.lang.Exception) {
-//                }
-//
-//            }
-//        }
-//    }
-//}
+
+    } catch (_: java.lang.Exception) {
+        context.sendNotFound()
+    }
+}
 //
 //fun Route.deleteFileRoute() {
 //    route("/remote/deletefile") {
