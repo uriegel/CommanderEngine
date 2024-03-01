@@ -81,10 +81,12 @@ class HttpServer(private val builder: Builder) {
                 ?.get
                 ?.request(HttpContext(
                     url,
+                    headers,
                     { sendJson(ostream, headers, it) },
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
                     { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
+                    { sendOk(ostream, headers) },
                     { sendNotFound(ostream, headers) }
                 )) == null
         }
@@ -94,10 +96,12 @@ class HttpServer(private val builder: Builder) {
                 ?.post
                 ?.request(HttpContext(
                     url,
+                    headers,
                     { sendJson(ostream, headers, it) },
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
                     { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
+                    { sendOk(ostream, headers) },
                     { sendNotFound(ostream, headers) }
                 ))
         }
@@ -195,6 +199,15 @@ class HttpServer(private val builder: Builder) {
         ostream.write(msg.toByteArray())
     }
 
+    private fun sendOk(ostream: OutputStream, headers: Map<String, String>) {
+        val msg = "HTTP/1.1 200 Ok\r\n" +
+                (headers["Origin"]?.let {
+                    "Access-Control-Allow-Origin: $it\r\n"
+                } ?: "") +
+                "\r\n"
+        ostream.write(msg.toByteArray())
+    }
+
     private fun handleOptions(id: String, headers: Map<String, String>, ostream: OutputStream) {
         val responseHeaders = mutableMapOf<String, String>()
         builder.corsDomain?.let{
@@ -232,8 +245,11 @@ class HttpServer(private val builder: Builder) {
 
 data class HttpContext(
     val url: String,
+    val headers: Map<String, String>,
     val sendJson: (json: String)->Unit,
     val sendStream: (stream: InputStream, size: Long, fileName: String,
                      headers: MutableMap<String, String>)->Unit,
     val postStream: (stream: OutputStream)->Unit,
+    val sendOk: ()->Unit,
     val sendNotFound: ()->Unit)
+
