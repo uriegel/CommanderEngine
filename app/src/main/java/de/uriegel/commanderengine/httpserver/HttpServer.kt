@@ -10,6 +10,7 @@ import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.min
 
 class HttpServer(private val builder: Builder) {
     fun start(): HttpServer {
@@ -83,7 +84,7 @@ class HttpServer(private val builder: Builder) {
                     { sendJson(ostream, headers, it) },
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
-                    { receivedStream -> postStream(httpInputStream, receivedStream)},
+                    { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
                     { sendNotFound(ostream, headers) }
                 )) == null
         }
@@ -96,7 +97,7 @@ class HttpServer(private val builder: Builder) {
                     { sendJson(ostream, headers, it) },
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
-                    { receivedStream -> postStream(httpInputStream, receivedStream)},
+                    { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
                     { sendNotFound(ostream, headers) }
                 ))
         }
@@ -135,8 +136,19 @@ class HttpServer(private val builder: Builder) {
         sendBytes()
     }
 
-    private fun postStream(httpInputStream: HttpInputStream, outputStream: OutputStream) {
+    private fun postStream(headers: Map<String, String>, httpInputStream: HttpInputStream, outputStream: OutputStream) {
+        val length = headers["Content-Length"]?.toInt() ?: 0
 
+        val buffer = ByteArray(8192)
+        tailrec fun readBuffer(len: Int) {
+            val read = httpInputStream.read(buffer, 0, min(buffer.size, len))
+            outputStream.write(buffer, 0, read)
+            val left = len-read
+            if (left > 0)
+                readBuffer(left)
+        }
+
+        readBuffer(length)
     }
 
     private fun handleBytes(outputStream: OutputStream, headers: Map<String, String>,
