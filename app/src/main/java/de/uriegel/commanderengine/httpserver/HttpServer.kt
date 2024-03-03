@@ -103,7 +103,7 @@ class HttpServer(private val builder: Builder) {
                 )) == null
         }
         if (!finished && method == "POST") {
-            builder
+            finished = builder
                 .routing
                 ?.post
                 ?.request(HttpContext(
@@ -115,7 +115,7 @@ class HttpServer(private val builder: Builder) {
                     { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
                     { sendOk(ostream, headers) },
                     { sendNotFound(ostream, headers) }
-                ))
+                )) == null
         }
         return finished
     }
@@ -127,7 +127,7 @@ class HttpServer(private val builder: Builder) {
     private fun sendStream(httpOutputStream: OutputStream, headers: Map<String, String>,
                            size: Long, fileName: String,
                            stream: InputStream, responseHeaders: MutableMap<String, String>) {
-        responseHeaders["Content-Length"] = "${size}"
+        responseHeaders["Content-Length"] = "$size"
         fileName.contentType()?.also {
             responseHeaders["Content-Type"] = it
         }
@@ -204,7 +204,7 @@ class HttpServer(private val builder: Builder) {
                 "Content-Length: ${payload.length}\r\n" +
                 (headers["Origin"]?.let {
                     "Access-Control-Allow-Origin: $it\r\n"
-                } ?: "") +
+                } ?: "\r\n") +
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 payload
@@ -213,11 +213,12 @@ class HttpServer(private val builder: Builder) {
 
     private fun sendOk(ostream: OutputStream, headers: Map<String, String>) {
         val payload = "Operation finished successfully"
-        val msg = "HTTP/1.1 200 Ok\r\n" +
+        val msg = "HTTP/1.1 200 OK\r\n" +
                 "Content-Length: ${payload.length}\r\n" +
                 (headers["Origin"]?.let {
                     "Access-Control-Allow-Origin: $it\r\n"
-                } ?: "") +
+                } ?: "\r\n") +
+                "Content-Type: text/plain\r\n" +
                 "\r\n" +
                 payload
         ostream.write(msg.toByteArray())
