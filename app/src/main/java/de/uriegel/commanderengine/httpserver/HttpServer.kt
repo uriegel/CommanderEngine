@@ -1,5 +1,6 @@
 package de.uriegel.commanderengine.httpserver
 
+import android.util.Log
 import de.uriegel.commanderengine.extensions.contentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ class HttpServer(private val builder: Builder) {
             while (running) {
                 try {
                     val client = server.accept()
+                    Log.i("URIEGEL", "New socket")
                     CoroutineScope(Dispatchers.IO).launch {
                         request(client)
                     }
@@ -40,6 +42,7 @@ class HttpServer(private val builder: Builder) {
         val id = idSeed.addAndGet(1).toString()
         val istream = HttpInputStream(client.getInputStream())
         val ostream = BufferedOutputStream(client.getOutputStream())
+        Log.i("URIEGEL", "New socket $id")
 
         tailrec fun nextRequest() {
             try {
@@ -48,7 +51,12 @@ class HttpServer(private val builder: Builder) {
                     return
                 }
 
-                val req = istream.nextLine().split(' ')
+                val possReq = istream.nextLine()
+                if (possReq == null) {
+                    client.close()
+                    return
+                }
+                val req = possReq.split(' ')
                 val method = req[0]
                 val url = req[1]
                 val protocol = req[2]
@@ -59,13 +67,17 @@ class HttpServer(private val builder: Builder) {
                         p
                     }
                     .toMap()
+                Log.i("URIEGEL", "New request $id $url")
                 if (method == "OPTIONS")
                     handleOptions(id, headers, ostream)
                 else if (!route(method, headers, url, istream, ostream))
                     sendNotFound(ostream, headers)
                 ostream.flush()
             } catch(e: Exception) {
+                Log.i("URIEGEL", "exception $id ${e.message}")
                 return
+            } finally {
+                istream.finished()
             }
             nextRequest()
         }
@@ -105,7 +117,7 @@ class HttpServer(private val builder: Builder) {
                     { sendNotFound(ostream, headers) }
                 ))
         }
-        return false
+        return finished
     }
 
     private fun sendJson(ostream: OutputStream, headers: Map<String, String>,
@@ -200,11 +212,14 @@ class HttpServer(private val builder: Builder) {
     }
 
     private fun sendOk(ostream: OutputStream, headers: Map<String, String>) {
+        val payload = "Operation finished successfully"
         val msg = "HTTP/1.1 200 Ok\r\n" +
+                "Content-Length: ${payload.length}\r\n" +
                 (headers["Origin"]?.let {
                     "Access-Control-Allow-Origin: $it\r\n"
                 } ?: "") +
-                "\r\n"
+                "\r\n" +
+                payload
         ostream.write(msg.toByteArray())
     }
 
@@ -217,7 +232,7 @@ class HttpServer(private val builder: Builder) {
         }
         responseHeaders["Content-Length"] = "0"
         val msg =
-            "HTTP/1.1 200 OK\r\n" +
+            "HTTP/1.1 204 No Content\r\n" +
             responseHeaders
                 .map { it.key + ": " + it.value}
                 .joinToString("\r\n") +
@@ -227,7 +242,7 @@ class HttpServer(private val builder: Builder) {
 
     private fun readHeaderPart(istream: HttpInputStream) = sequence {
         while (true) {
-            val line = istream.nextLine()
+            val line = istream.nextLine() ?: ""
             if (line.isEmpty())
                 break
             yield(line)

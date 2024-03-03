@@ -1,13 +1,18 @@
 package de.uriegel.commanderengine.httpserver
 
+import android.util.Log
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.util.Scanner
 
 class HttpInputStream(private val rawHttpStream: InputStream) : InputStream() {
-    fun nextLine(): String {
+    fun nextLine(): String? {
         if (scanner == null) {
+            Log.i("URIEGEL", "before read")
             pos = rawHttpStream.read(buffer)
+            Log.i("URIEGEL", "read $pos")
+            if (pos == -1)
+                return null
             scanner = Scanner(ByteArrayInputStream(buffer))
         }
 
@@ -39,8 +44,14 @@ class HttpInputStream(private val rawHttpStream: InputStream) : InputStream() {
             rawHttpStream.read(b, 0, len)
     }
 
+    fun finished() {
+        scanner = null
+        pos = 0
+        posHeadersEnd = -1
+    }
+
+    private val buffer = ByteArray(8192)
     private var pos = 0
     private var posHeadersEnd = -1
-    private var buffer = ByteArray(8192)
     private var scanner :Scanner? = null
 }
