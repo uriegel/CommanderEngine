@@ -5,6 +5,7 @@ class RoutingBuilder {
     var get: RouteBuilder? = null
     var post: RouteBuilder? = null
     var put: RouteBuilder? = null
+    var delete: RouteBuilder? = null
 
     fun get(initializer: RouteBuilder.() -> Unit) {
         get = RouteBuilder().apply(initializer)
@@ -16,5 +17,9 @@ class RoutingBuilder {
 
     fun put(initializer: RouteBuilder.() -> Unit) {
         put = RouteBuilder().apply(initializer)
+    }
+
+    fun delete (initializer: RouteBuilder.() -> Unit) {
+        delete = RouteBuilder().apply(initializer)
     }
 }

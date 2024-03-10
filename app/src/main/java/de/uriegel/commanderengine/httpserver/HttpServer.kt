@@ -132,6 +132,21 @@ class HttpServer(private val builder: Builder) {
                     { sendNoContent(ostream, headers) }
                 )) == null
         }
+        if (!finished && method == "DELETE") {
+            finished = builder
+                .routing
+                ?.delete
+                ?.request(HttpContext(
+                    url,
+                    headers,
+                    { sendJson(ostream, headers, it) },
+                    { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
+                        filename ,istream, responseHeaders) },
+                    { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
+                    { sendNotFound(ostream, headers) },
+                    { sendNoContent(ostream, headers) }
+                )) == null
+        }
         return finished
     }
 

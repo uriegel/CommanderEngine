@@ -2,6 +2,7 @@ package de.uriegel.commanderengine
 
 import android.os.Environment
 import de.uriegel.commanderengine.extensions.cutAt
+import de.uriegel.commanderengine.extensions.deleteRecursive
 import de.uriegel.commanderengine.httpserver.HttpContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -68,18 +69,16 @@ fun putFileRoute(urlPath: String, context: HttpContext) {
         context.sendNotFound()
     }
 }
-//
-//fun Route.deleteFileRoute() {
-//    route("/remote/deletefile") {
-//        delete {
-//            withContext(Dispatchers.IO) {
-//                File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}").deleteRecursive()
-//                call.respond(HttpStatusCode.OK)
-//            }
-//        }
-//    }
-//}
-//
+
+fun deleteFileRoute(urlPath: String, context: HttpContext) {
+    try {
+        File("${Environment.getExternalStorageDirectory()}${urlPath}")
+            .deleteRecursive()
+        context.sendNoContent()
+    } catch (_: java.lang.Exception) {
+        context.sendNotFound()
+    }
+}
 
 @Serializable
 data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
