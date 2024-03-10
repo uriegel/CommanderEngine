@@ -17,12 +17,15 @@ class Server {
                         (getFilesRoute(it.url.substring(9), it))
                     }
                     request("/getfile") {
-                        getFileRoute(it.url.substring(8), it)
+                        getFileRoute(it.url.substring(8), it, false)
+                    }
+                    request("/downloadfile") {
+                        getFileRoute(it.url.substring(13), it, true)
                     }
                 }
-                post {
-                    request("/postfile") {
-                        postFileRoute(it.url.substring(9), it)
+                put {
+                    request("/putfile") {
+                        putFileRoute(it.url.substring(8), it)
                     }
                 }
             }

@@ -30,19 +30,27 @@ fun getFilesRoute(urlPath: String, context: HttpContext) {
                         ?: listOf()))))
 }
 
-fun getFileRoute(urlPath: String, context: HttpContext) {
+fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
     val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
     if (file.exists()) {
-        val headers = mutableMapOf(
-            "Content-Disposition" to "attachment; filename=\"${file.name}\"",
-            "x-file-date" to "${file.lastModified()}")
+        val headers = if (download) {
+            mutableMapOf(
+                "Content-Disposition" to "attachment; filename=\"${file.name}\"",
+                "x-file-date" to "${file.lastModified()}"
+            )
+        } else {
+            mutableMapOf(
+                "x-file-date" to "${file.lastModified()}"
+            )
+        }
+
         context.sendStream(file.inputStream(), file.length(), file.name, headers)
     }
     else
         context.sendNotFound()
 }
 
-fun postFileRoute(urlPath: String, context: HttpContext) {
+fun putFileRoute(urlPath: String, context: HttpContext) {
     try {
         val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
 
@@ -54,7 +62,6 @@ fun postFileRoute(urlPath: String, context: HttpContext) {
                 file.setLastModified(it)
             }
         //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
-
         context.sendNoContent()
 
     } catch (_: java.lang.Exception) {
@@ -73,11 +80,9 @@ fun postFileRoute(urlPath: String, context: HttpContext) {
 //    }
 //}
 //
-//data class GetFiles(val path: String)
-//data class GetFilesInfos(val files: List<String>)
+
 @Serializable
 data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
-//data class FileInfo(val exists: Boolean, val file: String, val size: Long, val time: Long)
 
 @Serializable
 data class ResultItem<T>(val ok: T?) {
