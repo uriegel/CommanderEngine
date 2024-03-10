@@ -98,8 +98,8 @@ class HttpServer(private val builder: Builder) {
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
                     { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
-                    { sendOk(ostream, headers) },
-                    { sendNotFound(ostream, headers) }
+                    { sendNotFound(ostream, headers) },
+                    { sendNoContent(ostream, headers) }
                 )) == null
         }
         if (!finished && method == "POST") {
@@ -113,8 +113,8 @@ class HttpServer(private val builder: Builder) {
                     { istream, size, filename, responseHeaders -> sendStream(ostream, headers, size,
                         filename ,istream, responseHeaders) },
                     { receivedStream -> postStream(headers, httpInputStream, receivedStream)},
-                    { sendOk(ostream, headers) },
-                    { sendNotFound(ostream, headers) }
+                    { sendNotFound(ostream, headers) },
+                    { sendNoContent(ostream, headers) }
                 )) == null
         }
         return finished
@@ -204,23 +204,19 @@ class HttpServer(private val builder: Builder) {
                 "Content-Length: ${payload.length}\r\n" +
                 (headers["Origin"]?.let {
                     "Access-Control-Allow-Origin: $it\r\n"
-                } ?: "\r\n") +
+                } ?: "") +
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 payload
         ostream.write(msg.toByteArray())
     }
 
-    private fun sendOk(ostream: OutputStream, headers: Map<String, String>) {
-        val payload = "Operation finished successfully"
-        val msg = "HTTP/1.1 200 OK\r\n" +
-                "Content-Length: ${payload.length}\r\n" +
+    private fun sendNoContent(ostream: OutputStream, headers: Map<String, String>) {
+        val msg = "HTTP/1.1 204 No Content\r\n" +
                 (headers["Origin"]?.let {
                     "Access-Control-Allow-Origin: $it\r\n"
-                } ?: "\r\n") +
-                "Content-Type: text/plain\r\n" +
-                "\r\n" +
-                payload
+                } ?: "") +
+                "\r\n"
         ostream.write(msg.toByteArray())
     }
 
@@ -231,13 +227,12 @@ class HttpServer(private val builder: Builder) {
             responseHeaders["Access-Control-Allow-Headers"] = headers["Access-Control-Request-Headers"]!!
             responseHeaders["Access-Control-Allow-Method"] = headers["Access-Control-Request-Method"]!!
         }
-        responseHeaders["Content-Length"] = "0"
         val msg =
             "HTTP/1.1 204 No Content\r\n" +
             responseHeaders
                 .map { it.key + ": " + it.value}
                 .joinToString("\r\n") +
-            "\r\n\r\n"
+            "\r\n"
         ostream.write(msg.toByteArray())
     }
 
@@ -266,6 +261,6 @@ data class HttpContext(
     val sendStream: (stream: InputStream, size: Long, fileName: String,
                      headers: MutableMap<String, String>)->Unit,
     val postStream: (stream: OutputStream)->Unit,
-    val sendOk: ()->Unit,
-    val sendNotFound: ()->Unit)
+    val sendNotFound: ()->Unit,
+    val sendNoContent: ()->Unit)
 

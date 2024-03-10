@@ -55,7 +55,7 @@ fun postFileRoute(urlPath: String, context: HttpContext) {
             }
         //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
 
-        context.sendOk()
+        context.sendNoContent()
 
     } catch (_: java.lang.Exception) {
         context.sendNotFound()
