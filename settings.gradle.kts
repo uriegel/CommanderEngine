@@ -1,7 +1,13 @@
 pluginManagement {
     repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         gradlePluginPortal()
-        google()
         mavenCentral()
     }
 }
@@ -10,7 +16,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
     }
 }
 rootProject.name = "Commander Engine"
