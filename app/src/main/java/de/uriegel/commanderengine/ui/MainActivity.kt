@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.google.accompanist.permissions.*
 import de.uriegel.commanderengine.R
 import de.uriegel.commanderengine.extensions.isPermanentlyDenied
@@ -48,6 +49,11 @@ class MainActivity : ComponentActivity() {
                             Text(getString(R.string.app_title) )
                         })
                     }, content = {
+
+                        val permissions = getPermissions()
+                        PermissionCheck(stringResource(R.string.app_title), permissions.map { it.permission }.toList().toTypedArray(),
+                            permissions.map { it.rationale }.toList().toTypedArray()) {
+                        }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             if (permissionState)
                                 MainScreen({startService()}, {stopService()}, it)
@@ -67,6 +73,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    fun getPermissions() = sequence {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
+            yield(Permission(Manifest.permission.READ_EXTERNAL_STORAGE,
+                //R.string.permission_external_storage_rationale))
+                R.string.app_title))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            yield(Permission(Manifest.permission.POST_NOTIFICATIONS,
+                R.string.app_title))
+                //R.string.permission_notification_rationale))
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
