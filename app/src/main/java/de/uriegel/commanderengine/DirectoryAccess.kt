@@ -2,7 +2,6 @@ package de.uriegel.commanderengine
 
 import android.content.Context
 import android.os.Build
-import android.os.Environment
 import android.os.storage.StorageManager
 import androidx.core.content.ContextCompat
 import de.uriegel.commanderengine.extensions.cutAt
@@ -65,7 +64,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 }
 
 fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
-    val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
+    val file = File(urlPath.replace("%20", " ").cutAt('?'))
     if (file.exists()) {
         val headers = if (download) {
             mutableMapOf(
@@ -86,7 +85,7 @@ fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
 
 fun putFileRoute(urlPath: String, context: HttpContext) {
     try {
-        val file = File("${Environment.getExternalStorageDirectory()}${urlPath}".cutAt('?'))
+        val file = File(urlPath.replace("%20", " ").cutAt('?'))
 
         context.postStream(file.outputStream())
         context
@@ -105,7 +104,7 @@ fun putFileRoute(urlPath: String, context: HttpContext) {
 
 fun deleteFileRoute(urlPath: String, context: HttpContext) {
     try {
-        File("${Environment.getExternalStorageDirectory()}${urlPath}")
+        File(urlPath.replace("%20", " "))
             .deleteRecursive()
         context.sendNoContent()
     } catch (_: java.lang.Exception) {
