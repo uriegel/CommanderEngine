@@ -36,7 +36,7 @@ class Service: Service() {
                 }
             }
 
-        server.start()
+        server.start(this)
         running.value = true
         pending.value = false
     }

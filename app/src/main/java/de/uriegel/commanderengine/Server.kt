@@ -1,5 +1,6 @@
 package de.uriegel.commanderengine
 
+import android.content.Context
 import de.uriegel.commanderengine.httpserver.HttpServer
 import de.uriegel.commanderengine.httpserver.http
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -7,14 +8,14 @@ import kotlinx.serialization.ExperimentalSerializationApi
 @OptIn(ExperimentalSerializationApi::class)
 class Server {
 
-    fun start() {
+    fun start(context: Context) {
         server = http {
             port(8080)
             corsDomain("http://localhost:5173")
             routing {
                 get {
                     request("/getfiles") {
-                        (getFilesRoute(it.url.substring(9), it))
+                        (getFilesRoute(it.url.substring(9), it, context))
                     }
                     request("/getfile") {
                         getFileRoute(it.url.substring(8), it, false)
