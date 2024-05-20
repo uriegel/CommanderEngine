@@ -4,13 +4,16 @@ import android.content.Context
 import android.os.Build
 import android.os.storage.StorageManager
 import androidx.core.content.ContextCompat
-import de.uriegel.commanderengine.extensions.cutAt
 import de.uriegel.commanderengine.extensions.deleteRecursive
+import de.uriegel.commanderengine.extensions.urlDecode
 import de.uriegel.commanderengine.httpserver.HttpContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.net.URLDecoder
+import java.nio.file.Files
+import java.nio.file.Paths
 
 fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 
@@ -48,7 +51,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
             Json.encodeToString(
                 ResultItem.ok(
                     Result.success(
-                        File(urlPath.replace("%20", " "))
+                        File(urlPath.urlDecode())
                             .listFiles()
                             ?.filterNotNull()
                             ?.map {
@@ -64,7 +67,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 }
 
 fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
-    val file = File(urlPath.replace("%20", " ").cutAt('?'))
+    val file = File(urlPath.urlDecode())
     if (file.exists()) {
         val headers = if (download) {
             mutableMapOf(
@@ -85,7 +88,7 @@ fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
 
 fun putFileRoute(urlPath: String, context: HttpContext) {
     try {
-        val file = File(urlPath.replace("%20", " ").cutAt('?'))
+        val file = File(urlPath.urlDecode())
 
         context.postStream(file.outputStream())
         context
@@ -102,9 +105,18 @@ fun putFileRoute(urlPath: String, context: HttpContext) {
     }
 }
 
+fun createDirectoryRoute(urlPath: String, context: HttpContext) {
+    try {
+        Files.createDirectory(Paths.get(urlPath.urlDecode()))
+        context.sendNoContent()
+    } catch (_: java.lang.Exception) {
+        context.sendNotFound()
+    }
+}
+
 fun deleteFileRoute(urlPath: String, context: HttpContext) {
     try {
-        File(urlPath.replace("%20", " "))
+        File(urlPath.urlDecode())
             .deleteRecursive()
         context.sendNoContent()
     } catch (_: java.lang.Exception) {

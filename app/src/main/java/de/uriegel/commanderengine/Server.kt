@@ -29,6 +29,11 @@ class Server {
                         putFileRoute(it.url.substring(8), it)
                     }
                 }
+                post {
+                    request("/createdirectory") {
+                        createDirectoryRoute(it.url.substring(16), it)
+                    }
+                }
                 delete {
                     request("/deletefile") {
                         deleteFileRoute(it.url.substring(11), it)
