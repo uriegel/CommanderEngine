@@ -11,13 +11,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.net.URLDecoder
 import java.nio.file.Files
 import java.nio.file.Paths
 
 fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 
-    if (urlPath == "") {
+    if (urlPath == "" || urlPath == "/") {
         val root = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
             (context
                 .getSystemService(Context.STORAGE_SERVICE) as StorageManager)
@@ -34,36 +33,32 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 
         httpContext.sendJson(
             Json.encodeToString(
-                ResultItem.ok(
-                    Result.success(
-                        root
-                            .map {
-                                FileItem(
-                                    it ?: "",
-                                    true,
-                                    0,
-                                    it?.startsWith('.') ?: false,
-                                    0
-                                )
-                            }))))
+                root
+                    .map {
+                        FileItem(
+                            it ?: "",
+                            true,
+                            0,
+                            it?.startsWith('.') ?: false,
+                            0
+                        )
+                    }))
     } else
         httpContext.sendJson(
             Json.encodeToString(
-                ResultItem.ok(
-                    Result.success(
-                        File(urlPath.urlDecode())
-                            .listFiles()
-                            ?.filterNotNull()
-                            ?.map {
-                                FileItem(
-                                    it.name,
-                                    it.isDirectory,
-                                    it.length(),
-                                    it.name.startsWith('.'),
-                                    it.lastModified()
-                                )
-                            }
-                            ?: listOf()))))
+            File(urlPath.urlDecode())
+                .listFiles()
+                ?.filterNotNull()
+                ?.map {
+                    FileItem(
+                        it.name,
+                        it.isDirectory,
+                        it.length(),
+                        it.name.startsWith('.'),
+                        it.lastModified()
+                    )
+                }
+                ?: listOf()))
 }
 
 fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
@@ -127,12 +122,4 @@ fun deleteFileRoute(urlPath: String, context: HttpContext) {
 @Serializable
 data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
 
-@Serializable
-data class ResultItem<T>(val ok: T?) {
-
-    companion object {
-        fun <T> ok(value: Result<T>): ResultItem<T> =
-            ResultItem(value.getOrNull())
-    }
-}
 
