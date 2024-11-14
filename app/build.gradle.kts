@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "de.uriegel.commanderengine"
-    compileSdk = 34
+    compileSdk = 35
 
     signingConfigs {
         create("signing") {
@@ -42,18 +42,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "19"
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -71,15 +71,15 @@ kotlin {
 }
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.activity:activity-compose:1.9.0")
-    implementation("androidx.compose.ui:ui:1.6.7")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.6.7")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.ui:ui:1.7.5")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.5")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
+    implementation("androidx.compose.material3:material3:1.3.1")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.6.7")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.5")
 }
