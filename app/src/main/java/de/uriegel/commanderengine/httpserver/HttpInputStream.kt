@@ -24,16 +24,16 @@ class HttpInputStream(private val rawHttpStream: InputStream) : InputStream() {
     }
 
     override fun read(b: ByteArray, off: Int, len: Int): Int {
-        tailrec fun GetHeaderEnd(startPos: Int): Int {
+        tailrec fun getHeaderEnd(startPos: Int): Int {
             val pos = buffer.drop(startPos).indexOf(10.toByte()) + startPos
             return if (buffer[pos + 2] == 10.toByte())
                 pos + 3
             else
-                GetHeaderEnd(pos + 1)
+                getHeaderEnd(pos + 1)
         }
 
         if (posHeadersEnd == -1)
-            posHeadersEnd = GetHeaderEnd(0)
+            posHeadersEnd = getHeaderEnd(0)
 
         val bufferRestLen = pos - posHeadersEnd
         return if (bufferRestLen > 0) {

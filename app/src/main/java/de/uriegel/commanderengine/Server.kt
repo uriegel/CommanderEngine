@@ -3,9 +3,7 @@ package de.uriegel.commanderengine
 import android.content.Context
 import de.uriegel.commanderengine.httpserver.HttpServer
 import de.uriegel.commanderengine.httpserver.http
-import kotlinx.serialization.ExperimentalSerializationApi
 
-@OptIn(ExperimentalSerializationApi::class)
 class Server {
 
     fun start(context: Context) {

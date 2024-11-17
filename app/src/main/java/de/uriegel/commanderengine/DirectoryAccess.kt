@@ -63,7 +63,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
 
 fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
     val file = File(urlPath.urlDecode())
-    if (file.exists()) {
+    if (file.exists() && file.isFile) {
         val headers = if (download) {
             mutableMapOf(
                 "Content-Disposition" to "attachment; filename=\"${file.name}\"",
