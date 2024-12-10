@@ -21,6 +21,9 @@ class Server {
                     request("/downloadfile") {
                         getFileRoute(it.url.substring(13), it, true)
                     }
+                    request("/metadata") {
+                        getMetaData(it.url.substring(9), it)
+                    }
                 }
                 put {
                     request("/putfile") {

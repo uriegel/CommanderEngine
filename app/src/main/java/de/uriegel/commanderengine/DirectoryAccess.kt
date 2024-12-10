@@ -81,6 +81,17 @@ fun getFileRoute(urlPath: String, context: HttpContext, download: Boolean) {
         context.sendNotFound()
 }
 
+fun getMetaData(urlPath: String, context: HttpContext) {
+    val file = File(urlPath.urlDecode())
+
+    val (len, lastModified) = if (file.exists()) {
+        Pair(file.length(), file.lastModified())
+    } else {
+        Pair<Long, Long>(-1, 0)
+    }
+    context.sendJson(Json.encodeToString(MetaData(len, lastModified)))
+}
+
 fun putFileRoute(urlPath: String, context: HttpContext) {
     try {
         val file = File(urlPath.urlDecode())
@@ -122,4 +133,6 @@ fun deleteFileRoute(urlPath: String, context: HttpContext) {
 @Serializable
 data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, val isHidden: Boolean, val time: Long)
 
+@Serializable
+data class MetaData(val size: Long, val time: Long)
 
