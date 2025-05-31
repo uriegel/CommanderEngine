@@ -1,7 +1,6 @@
 package de.uriegel.commanderengine.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import de.uriegel.commanderengine.BuildConfig
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -29,7 +29,7 @@ fun CheckPermissions(storagePermissionState: PermissionState, setPermissionState
                     Lifecycle.Event.ON_START -> {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                             && !hasAllFilesPermission()) {
-                            val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+                            val uri = "package:${BuildConfig.APPLICATION_ID}".toUri()
                             val intent = Intent(
                                 Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                                 uri

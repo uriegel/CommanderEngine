@@ -3,7 +3,6 @@ package de.uriegel.commanderengine
 import android.content.Context
 import android.os.Build
 import android.os.storage.StorageManager
-import androidx.core.content.ContextCompat
 import de.uriegel.commanderengine.extensions.deleteRecursive
 import de.uriegel.commanderengine.extensions.urlDecode
 import de.uriegel.commanderengine.httpserver.HttpContext
@@ -25,8 +24,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
                     it.directory?.path
                 }
         else
-            // For devices below Android N, you can use ContextCompat.getExternalFilesDirs
-            ContextCompat.getExternalFilesDirs(context, null)
+            context.getExternalFilesDirs(null)
                 .map {
                     it.absolutePath
                 }
@@ -35,13 +33,7 @@ fun getFilesRoute(urlPath: String, httpContext: HttpContext, context: Context) {
             Json.encodeToString(
                 root
                     .map {
-                        FileItem(
-                            it ?: "",
-                            true,
-                            0,
-                            it?.startsWith('.') ?: false,
-                            0
-                        )
+                        FileItem(it ?: "", true, 0, it?.startsWith('.') == true, 0)
                     }))
     } else
         httpContext.sendJson(
