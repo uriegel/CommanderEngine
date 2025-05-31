@@ -95,8 +95,8 @@ fun getMetaData(urlPath: String, context: HttpContext) {
 fun putFileRoute(urlPath: String, context: HttpContext) {
     try {
         val file = File(urlPath.urlDecode())
-        if (!file.parentFile.exists())
-            Files.createDirectories(file.parentFile.toPath())
+        if (file.parentFile != null && file.parentFile?.exists() != true)
+            Files.createDirectories(file.parentFile!!.toPath())
 
         context.postStream(file.outputStream())
         context
