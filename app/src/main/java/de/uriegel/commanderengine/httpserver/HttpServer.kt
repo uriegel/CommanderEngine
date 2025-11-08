@@ -60,13 +60,11 @@ class HttpServer(private val builder: Builder) {
                 val method = req[0]
                 val url = req[1]
                 val protocol = req[2]
-                val headers = readHeaderPart(istream)
-                    .map {
-                        val pairs = it.split(": ")
-                        val p = Pair(pairs[0], pairs[1])
-                        p
-                    }
-                    .toMap()
+                val headers: java.util.TreeMap<String, String> =
+                    readHeaderPart(istream)
+                        .map { it.split(": ", limit = 2) }
+                        .associate { it[0] to it[1] }
+                        .let { java.util.TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER).apply { putAll(it) } }
                 Log.i("URIEGEL", "New request $id $url")
                 if (method == "OPTIONS")
                     handleOptions(id, headers, ostream)
@@ -183,11 +181,11 @@ class HttpServer(private val builder: Builder) {
     }
 
     private fun postStream(headers: Map<String, String>, httpInputStream: HttpInputStream, outputStream: OutputStream) {
-        val length = headers["Content-Length"]?.toInt() ?: 0
+        val length = headers["Content-Length"]?.toLong() ?: 0
 
         val buffer = ByteArray(8192)
-        tailrec fun readBuffer(len: Int) {
-            val read = httpInputStream.read(buffer, 0, min(buffer.size, len))
+        tailrec fun readBuffer(len: Long) {
+            val read = httpInputStream.read(buffer, 0, min(buffer.size.toLong(), len).toInt())
             outputStream.write(buffer, 0, read)
             val left = len-read
             if (left > 0)

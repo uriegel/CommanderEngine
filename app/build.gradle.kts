@@ -11,7 +11,7 @@ android {
 
     signingConfigs {
         create("signing") {
-            storeFile = file("/home/uwe/Dokumente/Entwicklung/AndroidKeyStore/keystore.jks")
+            storeFile = file("/home/uwe/Documents/Entwicklung/AndroidKeyStore/keystore.jks")
             storePassword = extra["ANDROID_STORE_PASSWORD"].toString()
             keyAlias = "androidKey"
             keyPassword = extra["ANDROID_KEY_PASSWORD"].toString()
