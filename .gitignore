@@ -10,3 +10,6 @@
 local.properties
 /app/gradle.properties
 /.idea/deploymentTargetDropDown.xml
+/app/release
+
+
