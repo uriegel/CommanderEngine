@@ -21,6 +21,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.delete
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveStream
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.post
@@ -134,8 +135,7 @@ fun startKtorServer(context: Context, port: Int = 8080): ApplicationEngine {
                     val httpStream = call.receiveStream()
                     httpStream.copyTo(file.outputStream())
                     call.request
-                        .headers
-                        .get("x-file-date")
+                        .headers["x-file-date"]
                         ?.toLong()
                         ?.also { file.setLastModified(it) }
                     //file.renameTo(File("${Environment.getExternalStorageDirectory()}${call.request.queryParameters["path"]!!}"))
@@ -164,6 +164,18 @@ fun startKtorServer(context: Context, port: Int = 8080): ApplicationEngine {
                     call.respond(HttpStatusCode.NotFound, mapOf("error" to "Not found"))
                 }
             }
+            delete("/deletefiles") {
+                try {
+                    val input = call.receive<DeleteInput>()
+                    input.items.forEach {
+                        File(input.path + '/' + it)
+                            .deleteRecursive()
+                    }
+                    call.respond(HttpStatusCode.NoContent)
+                } catch (_: java.lang.Exception) {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Not found"))
+                }
+            }
         }
     }
 
@@ -184,3 +196,6 @@ data class FileItem(val name: String, val isDirectory: Boolean, val size: Long, 
 
 @Serializable
 data class MetaData(val size: Long, val time: Long)
+
+@Serializable
+data class DeleteInput(val path: String, val items: Array<String>)
