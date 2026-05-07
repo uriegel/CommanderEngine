@@ -11,7 +11,7 @@ android {
 
     signingConfigs {
         create("signing") {
-            storeFile = file("/home/uwe/Documents/Entwicklung/AndroidKeyStore/keystore.jks")
+            storeFile = file("/home/uwe/Dokumente/Entwicklung/AndroidKeyStore/keystore.jks")
             storePassword = extra["ANDROID_STORE_PASSWORD"].toString()
             keyAlias = "androidKey"
             keyPassword = extra["ANDROID_KEY_PASSWORD"].toString()
@@ -80,5 +80,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     debugImplementation(libs.androidx.ui.tooling)
 }

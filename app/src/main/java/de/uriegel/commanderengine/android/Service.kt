@@ -3,16 +3,17 @@ package de.uriegel.commanderengine.android
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import de.uriegel.commanderengine.R
-import de.uriegel.commanderengine.Server
 import de.uriegel.commanderengine.android.Application.Companion.CHANNEL_SERVICE_ID
+import de.uriegel.commanderengine.startKtorServer
+import de.uriegel.commanderengine.stopKtorServer
 import de.uriegel.commanderengine.ui.MainActivity
+import io.ktor.server.engine.ApplicationEngine
 
 class Service: Service() {
     override fun onCreate() {
@@ -29,14 +30,15 @@ class Service: Service() {
             .setContentIntent(pendingIntent)
             .build()
 
-        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
+        wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
             .run {
                 newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
                     acquire(20 * 3600_000.toLong())
                 }
             }
 
-        server.start(this)
+        //server.start(this)
+        server = startKtorServer(this)
         running.value = true
         pending.value = false
     }
@@ -50,7 +52,7 @@ class Service: Service() {
             }
         }
 
-        server.stop()
+        server?.also { stopKtorServer(it) }
 
         running.value = false
         pending.value = false
@@ -67,7 +69,7 @@ class Service: Service() {
 
     private lateinit var notification: Notification
     private lateinit var wakeLock: PowerManager.WakeLock
-    private val server = Server()
+    private var server: ApplicationEngine? = null
 
     companion object {
         val pending = mutableStateOf(false)
